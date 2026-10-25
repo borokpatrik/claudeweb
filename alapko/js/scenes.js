@@ -1,5 +1,9 @@
-// scenes.js: procedural construction scenes for Alapkő (Scenes agent).
-// Every build(variant) returns a fresh { scene, camera, size }.
+// scenes.js: procedural construction scenes for Alapkő (Engine agent since v2).
+// Every build(variant, env) returns a fresh { scene, camera, size }.
+// env (optional, used by the engine when the object sits in a photo landscape):
+//   { bare: true }            omit the site ground plate / plinth (the landscape is the ground)
+//   { sunSide: -1..1 }        sun azimuth relative to the camera (-1 left, +1 right of frame)
+//   { sunColor, skyColor, groundColor }  THREE.Color-compatible values for the lights
 // Convention: the subject is centred on the world origin, `size` is its
 // approximate radius, the camera looks at the origin (camera.userData.target).
 import * as THREE from 'three';
@@ -129,12 +133,15 @@ const VARIANTS = [
 ];
 const variantOf = (v) => VARIANTS[(((v | 0) % 6) + 6) % 6];
 
-function addLights(scene, v, size, baseYaw) {
+function addLights(scene, v, size, baseYaw, env) {
   const V = variantOf(v), w = V.warm;
-  const sky = new THREE.Color('#bcd0f5').lerp(new THREE.Color('#ffe2c2'), w);
-  const sunC = new THREE.Color('#e6eeff').lerp(new THREE.Color('#ffbd78'), w);
-  scene.add(new THREE.HemisphereLight(sky, new THREE.Color('#3b3128'), 1.35));
-  const a = (baseYaw + V.yaw * 0.6 - 50) * D2R;
+  const sky = env && env.skyColor ? new THREE.Color(env.skyColor) : new THREE.Color('#bcd0f5').lerp(new THREE.Color('#ffe2c2'), w);
+  const sunC = env && env.sunColor ? new THREE.Color(env.sunColor) : new THREE.Color('#e6eeff').lerp(new THREE.Color('#ffbd78'), w);
+  const gnd = env && env.groundColor ? new THREE.Color(env.groundColor) : new THREE.Color('#3b3128');
+  scene.add(new THREE.HemisphereLight(sky, gnd, 1.35));
+  // sun: matched to the landscape photo when env.sunSide is given, else v1's camera-left key
+  const off = env && typeof env.sunSide === 'number' ? THREE.MathUtils.clamp(env.sunSide, -1, 1) * 62 : V.yaw * 0.6 - 50;
+  const a = (baseYaw + off) * D2R;
   const sun = new THREE.DirectionalLight(sunC, 3.1);
   sun.position.set(Math.sin(a) * size * 3, size * 3.4, Math.cos(a) * size * 3);
   scene.add(sun);
@@ -160,11 +167,11 @@ function makeCamera(size, v, { yaw = 30, elev = 20, fov = 38, fill = 0.72, lift 
   return cam;
 }
 
-function finish(k, v, size, camOpts) {
+function finish(k, v, size, camOpts, env) {
   const scene = new THREE.Scene();
   scene.background = null;
   scene.add(k.root);
-  addLights(scene, v, size, camOpts.yaw ?? 30);
+  addLights(scene, v, size, camOpts.yaw ?? 30, env);
   const camera = makeCamera(size, v, camOpts);
   scene.updateMatrixWorld(true);
   return { scene, camera, size };
@@ -182,7 +189,8 @@ function iBeam(k, mat, len, h, w, parent) {
 }
 
 /* =================================================================== HOUSE */
-function buildHouse(v = 0) {
+function buildHouse(v = 0, env = null) {
+  const bare = !!(env && env.bare);
   const k = new Kit([0.4, 3.0, 0.8], 1.2);
   const render = k.m('#ece6db', { r: 0.9 });
   const timber = k.m('#b0743f', { r: 0.75 });
@@ -200,7 +208,7 @@ function buildHouse(v = 0) {
   const trunk = k.m('#5b3e28');
 
   // site
-  k.box(lawn, 15, 0.3, 11.5, 0.5, -0.15, 0.9);
+  if (!bare) k.box(lawn, 15, 0.3, 11.5, 0.5, -0.15, 0.9);
   k.box(paving, 3.2, 0.06, 1.6, 4.6, 0.03, 4.0); // driveway pad under cantilever
   k.box(deck, 8.4, 0.14, 1.4, -1.0, 0.07, 3.7);
   k.box(paving, 5.4, 0.08, 2.6, -2.2, 0.04, 5.6); // pool coping
@@ -261,11 +269,12 @@ function buildHouse(v = 0) {
     { p: [0.8, 0.3, 3.95], s: [0.45, 0.35, 0.4] }, { p: [1.6, 0.25, 4.1], s: [0.35, 0.3, 0.32] },
     { p: [-5.6, 0.3, 1.2], s: [0.4, 0.35, 0.45] }, { p: [6.6, 0.3, 2.4], s: [0.45, 0.4, 0.45] },
   ]);
-  return finish(k, v, 7.4, { yaw: 28, elev: 16, fov: 38, fill: 0.98 });
+  return finish(k, v, 7.4, { yaw: 28, elev: 16, fov: 38, fill: 0.98 }, env);
 }
 
 /* =================================================================== CRANE */
-function buildCrane(v = 0) {
+function buildCrane(v = 0, env = null) {
+  const bare = !!(env && env.bare);
   const k = new Kit([-0.5, 11.5, 0], 2.0);
   const amber = k.m('#f2a900', { r: 0.55, m: 0.15 });
   const amberDk = k.m('#c98200', { r: 0.6, m: 0.15 });
@@ -278,7 +287,7 @@ function buildCrane(v = 0) {
   const ground = k.m('#6a6156', { r: 1 });
   const ply = k.m('#d6ad62', { r: 0.8 });
 
-  k.box(ground, 20, 0.3, 12, -1.5, -0.15, 0);
+  if (!bare) k.box(ground, 20, 0.3, 12, -1.5, -0.15, 0);
 
   // half-built concrete frame: x[-5,5], z[-4,4]
   const xs = [-4.6, -1.55, 1.55, 4.6], zs = [-3.6, 0, 3.6];
@@ -379,11 +388,12 @@ function buildCrane(v = 0) {
     const b = iBeam(k, steel, 6.0, 0.6, 0.42);
     b.position.set(tx, loadY + 0.1 - (i === 2 ? 0.6 : 0), mz - 0.27 + (i === 2 ? 0.27 : i * 0.54));
   }
-  return finish(k, v, 14.5, { yaw: 24, elev: 10, fov: 40, fill: 0.86 });
+  return finish(k, v, 14.5, { yaw: 24, elev: 10, fov: 40, fill: 0.86 }, env);
 }
 
 /* ==================================================================== WALL */
-function buildWall(v = 0) {
+function buildWall(v = 0, env = null) {
+  const bare = !!(env && env.bare);
   const k = new Kit([0.3, 0.55, 0.3], 0.35);
   const white = k.m('#ffffff', { r: 0.85 });
   const mortar = k.m('#bdb6a8', { r: 1 });
@@ -398,7 +408,7 @@ function buildWall(v = 0) {
   const R = rng(7);
   const brickCol = () => new THREE.Color().setHSL(0.03 + R() * 0.025, 0.55 + R() * 0.15, 0.4 + R() * 0.09);
 
-  k.box(ground, 4.3, 0.06, 2.3, 0.3, -0.03, 0.35);
+  if (!bare) k.box(ground, 4.3, 0.06, 2.3, 0.3, -0.03, 0.35);
   k.box(footing, 3.1, 0.12, 0.42, -0.25, 0.06, 0);
 
   // wall in running bond, racked back at the right end
@@ -477,11 +487,12 @@ function buildWall(v = 0) {
     { p: [0.9, 0.035, 0.6], s: [0.245, 0.065, 0.12], r: [0, 0.4, 0], c: brickCol() },
     { p: [1.05, 0.035, 0.88], s: [0.245, 0.065, 0.12], r: [0, -0.3, 0], c: brickCol() },
   ]);
-  return finish(k, v, 2.2, { yaw: 30, elev: 18, fov: 38, fill: 1.2 });
+  return finish(k, v, 2.2, { yaw: 30, elev: 18, fov: 38, fill: 1.2 }, env);
 }
 
 /* ================================================================== BLOCKS */
-function buildBlocks(v = 0) {
+function buildBlocks(v = 0, env = null) {
+  const bare = !!(env && env.bare);
   const k = new Kit([0, 1.6, 0], 0.8);
   const white = k.m('#ffffff', { r: 0.95 });
   const steel = k.m('#4f7fb8', { r: 0.45, m: 0.35 });
@@ -490,7 +501,7 @@ function buildBlocks(v = 0) {
   const R = rng(11);
   const grey = () => new THREE.Color().setHSL(0.58 - R() * 0.5, 0.04 + R() * 0.04, 0.44 + R() * 0.16);
 
-  k.cyl(plinth, 3.4, 0.16, 0, -0.08, 0, 40);
+  if (!bare) k.cyl(plinth, 3.4, 0.16, 0, -0.08, 0, 40);
   // jenga-like pyramid: each layer turns ~90deg (+ jitter) and has fewer blocks
   const blocks = [];
   const bh = 0.46, counts = [6, 5, 5, 4, 3, 2, 1];
@@ -523,11 +534,11 @@ function buildBlocks(v = 0) {
   b3.position.set(0.2, bh * 2.5, -0.1); b3.rotation.set(0, 1.25, 0.05);
   const b4 = iBeam(k, amber, 3.0, 0.28, 0.22);
   b4.position.set(0, bh * 7 + 0.14, 0); b4.rotation.set(0, 0.5, 0);
-  return finish(k, v, 3.5, { yaw: 30, elev: 16, fov: 38, fill: 0.95 });
+  return finish(k, v, 3.5, { yaw: 30, elev: 16, fov: 38, fill: 0.95 }, env);
 }
 
 /* =================================================================== TILES */
-function buildTiles(v = 0) {
+function buildTiles(v = 0, env = null) {
   const k = new Kit([0.1, 0.2, 0.1], 0.06);
   const white = k.m('#ffffff', { r: 0.4 });
   const screed = k.m('#8e8a83', { r: 1 });
@@ -599,11 +610,11 @@ function buildTiles(v = 0) {
   k.mesh(bG, bucket, -1.6, 0.18, 1.95);
   k.cyl(glue, 0.175, 0.01, -1.6, 0.361, 1.95, 16);
   k.box(amber, 0.36, 0.08, 0.005, -1.6, 0.2, 2.141);
-  return finish(k, v, 2.6, { yaw: 25, elev: 32, fov: 38, fill: 1.2 });
+  return finish(k, v, 2.6, { yaw: 25, elev: 32, fov: 38, fill: 1.2 }, env);
 }
 
 /* =================================================================== REBAR */
-function buildRebar(v = 0) {
+function buildRebar(v = 0, env = null) {
   const k = new Kit([0, 0.7, 0], 0.25);
   const top = k.m('#4a3a2e', { r: 1 });
   const clay = k.m('#77604c', { r: 1 });
@@ -678,14 +689,17 @@ function buildRebar(v = 0) {
     { p: [-2.9, H + 0.2, 1.4], s: [0.05, 0.4, 0.05] },
     { p: [0, H + 0.3, 1.4], s: [5.8, 0.015, 0.015] },
   ]);
-  return finish(k, v, 3.3, { yaw: 30, elev: 40, fov: 38, fill: 1.05 });
+  return finish(k, v, 3.3, { yaw: 30, elev: 40, fov: 38, fill: 1.05 }, env);
 }
 
+// v2 composition (CONTRACT-V2 D2). land: manifest landscape ids per layer; place: normalized
+// viewport anchor of the object at 16:9 (x centre, y of its base, height as a fraction of the
+// viewport height). Extra fields are optional; build() stays the v1 entry point.
 export const SCENES = {
-  house: { label: 'Családi ház', build: buildHouse },
-  crane: { label: 'Toronydaru', build: buildCrane },
-  wall: { label: 'Falazás', build: buildWall },
-  blocks: { label: 'Építőelemek', build: buildBlocks },
-  tiles: { label: 'Burkolás', build: buildTiles },
-  rebar: { label: 'Alapozás', build: buildRebar },
+  house: { label: 'Családi ház', build: buildHouse, land: { far: 'land-hills-dawn', near: 'land-meadow' }, place: { x: 0.64, base: 0.74, h: 0.40 } },
+  crane: { label: 'Toronydaru', build: buildCrane, land: { far: 'land-forest-edge', near: 'land-field' }, place: { x: 0.70, base: 0.76, h: 0.62 } },
+  wall: { label: 'Falazás', build: buildWall, land: { far: 'land-lakeside', near: 'land-grass-close' }, place: { x: 0.62, base: 0.78, h: 0.30 } },
+  blocks: { label: 'Építőelemek', build: buildBlocks, land: { far: 'land-valley-mist', near: 'land-forest-floor' }, place: { x: 0.66, base: 0.76, h: 0.36 } },
+  tiles: { label: 'Burkolás', build: buildTiles, land: null, place: { x: 0.5, base: 0.8, h: 0.5 } },
+  rebar: { label: 'Alapozás', build: buildRebar, land: null, place: { x: 0.5, base: 0.8, h: 0.5 } },
 };

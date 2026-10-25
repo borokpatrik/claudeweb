@@ -1,5 +1,7 @@
-// sections.js · Sections agent
+// sections.js · Motion agent (v2; v1 by the Sections agent)
 // Non-3D animation, header + dropdown, section pill, contact form.
+// v2: pill covers #velemenyek, debounced ScrollTrigger.refresh() on load / gallery:ready / reviews:ready,
+// reviews entrance, ticker pauses while a modal is open. SVG slot art lives in svg-anim.js.
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -21,14 +23,45 @@ export function initSections() {
   initMobileNav();
   initPill();
   initForm(reduce);
-  initImages();
 
   if (reduce) initReduced();
   else initMotion();
 
-  // Late-arriving images / fonts change layout: keep trigger positions honest.
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => ScrollTrigger.refresh());
-  window.addEventListener('load', () => ScrollTrigger.refresh(), { once: true });
+  initRefresh();
+  initModalPause();
+}
+
+/* =========================================================
+   Keep trigger positions honest when late content changes layout
+   (fonts, window load, gallery rows, reviews slider; CONTRACT-V2 D8).
+   ========================================================= */
+let refreshTimer = 0;
+export function scheduleRefresh() {
+  clearTimeout(refreshTimer);
+  refreshTimer = setTimeout(() => ScrollTrigger.refresh(), 120);
+}
+
+function onReady(id, evt, fn) {
+  const sec = document.getElementById(id);
+  let done = false;
+  const run = () => { if (!done) { done = true; fn(sec); } };
+  if (sec && sec.dataset.ready === '1') run();
+  else document.addEventListener(evt, run, { once: true });
+}
+
+function initRefresh() {
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(scheduleRefresh);
+  if (document.readyState === 'complete') scheduleRefresh();
+  else window.addEventListener('load', scheduleRefresh, { once: true });
+  onReady('galeria', 'gallery:ready', scheduleRefresh);
+  onReady('velemenyek', 'reviews:ready', scheduleRefresh);
+}
+
+/* Decorative loops stop while a modal is open (D6 events). */
+function initModalPause() {
+  const set = (state) => qsa('.ticker-track').forEach((t) => { t.style.animationPlayState = state; });
+  document.addEventListener('modal:open', () => set('paused'));
+  document.addEventListener('modal:close', () => set(''));
 }
 
 /* =========================================================
@@ -134,6 +167,7 @@ function initPill() {
   const menu = qs('#pill-menu', pill);
   const nameEl = qs('.pill-name', pill);
   const numEl = qs('.pill-num', pill);
+  syncPillMenu(menu, sections);
   const items = qsa('a', menu);
 
   const setCurrent = (sec) => {
@@ -191,20 +225,24 @@ function initPill() {
   items.forEach((a) => a.addEventListener('click', () => close()));
 }
 
-/* =========================================================
-   Render placeholders: fade stills in when renders.js fills src
-   ========================================================= */
-function initImages() {
-  const mark = (img) => { if (img.complete && img.naturalWidth > 0) img.classList.add('is-loaded'); };
-  qsa('img[data-render]').forEach(mark);
-  document.addEventListener('load', (e) => {
-    const t = e.target;
-    if (t instanceof HTMLImageElement && t.matches('img[data-render]')) t.classList.add('is-loaded');
-  }, true);
-  // Safety net for cached images whose load fired before we listened.
-  new MutationObserver((muts) => muts.forEach((m) => {
-    if (m.target instanceof HTMLImageElement) requestAnimationFrame(() => mark(m.target));
-  })).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['src'] });
+// Make the pill menu mirror `main > section[id]`: insert any missing item (built from the
+// section's data-label) in document order, and number every item NN.
+function syncPillMenu(menu, sections) {
+  sections.forEach((sec, i) => {
+    let a = qs(`a[data-pill="${sec.id}"]`, menu);
+    if (!a) {
+      const li = document.createElement('li');
+      a = document.createElement('a');
+      a.href = '#' + sec.id;
+      a.dataset.pill = sec.id;
+      a.append(document.createElement('span'), document.createTextNode(sec.dataset.label || sec.id));
+      li.append(a);
+      const next = sections.slice(i + 1).map((s) => qs(`a[data-pill="${s.id}"]`, menu)).find(Boolean);
+      menu.insertBefore(li, next ? next.closest('li') : null);
+    }
+    const num = qs('span', a);
+    if (num) num.textContent = String(i + 1).padStart(2, '0');
+  });
 }
 
 /* =========================================================
@@ -283,7 +321,7 @@ function initForm(reduce) {
    ========================================================= */
 function initReduced() {
   // Simple fades; SVGs drawn fully; no transforms; floating blocks static.
-  qsa('[data-split], [data-reveal], .figures, .chips, .photo-row, .work-cards, .contact-list').forEach((el) => {
+  qsa('[data-split], [data-reveal], .figures, .chips, .photo-row, .work-cards, .contact-list, .review-viewport').forEach((el) => {
     gsap.from(el, {
       opacity: 0, duration: 0.4, ease: 'none',
       scrollTrigger: { trigger: el, start: 'top 92%', once: true },
@@ -304,6 +342,29 @@ function initMotion() {
   drawFoundation();
   floatingBlocks();
   workCards();
+  onReady('velemenyek', 'reviews:ready', reviewsIntro);
+}
+
+/* ---------- #velemenyek: viewport + dots enter once (never touches .review-track) ---------- */
+function reviewsIntro(sec) {
+  if (!sec) return;
+  const vp = qs('.review-viewport', sec);
+  const dots = qsa('.review-dots > *', sec);
+  const ctrls = qsa('[data-review-prev], [data-review-next]', sec);
+  if (vp) {
+    gsap.fromTo(vp, { y: 48, opacity: 0, clipPath: 'inset(8% 4% 8% 4% round 24px)' }, {
+      y: 0, opacity: 1, clipPath: 'inset(0% 0% 0% 0% round 0px)', duration: 0.8, ease: 'expo.out',
+      clearProps: 'clipPath',
+      scrollTrigger: { trigger: vp, start: 'top 90%', once: true },
+    });
+  }
+  if (dots.length || ctrls.length) {
+    gsap.from([...ctrls, ...dots], {
+      scale: 0.6, opacity: 0, duration: 0.5, ease: 'back.out(2.6)', stagger: 0.04, delay: 0.15,
+      scrollTrigger: { trigger: vp || sec, start: 'top 90%', once: true },
+    });
+  }
+  scheduleRefresh();
 }
 
 function heroIntro() {

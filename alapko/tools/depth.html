@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="hu">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alapkő depth tool</title>
+<style>
+  body { font: 14px/1.4 system-ui, sans-serif; background: #111; color: #ddd; margin: 16px; }
+  #log { white-space: pre-wrap; font-family: ui-monospace, monospace; font-size: 12px; }
+  #grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  #grid figure { margin: 0; font-size: 11px; }
+  #grid img, #grid canvas { width: 200px; height: auto; display: block; }
+</style>
+</head>
+<body>
+<h1>Depth maps (Depth Anything V2 small → assets/depth/)</h1>
+<p>Run via <code>python tools/save_server.py</code>, then open <code>/tools/depth.html</code>.
+Query: <code>?ids=a,b</code> to limit, <code>?method=heuristic</code> to force the fallback, <code>?device=webgpu</code>.</p>
+<div id="log"></div>
+<div id="grid"></div>
+<script type="module">
+// Jobs come from tools/depth-jobs.json: ["photo-id", ...]; each reads assets/photos/<id>.jpg
+// and saves assets/depth/<id>.png: 8-bit grayscale PNG, white = near, long edge <= 960.
+const TF_URL = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.1';
+const MODEL = 'onnx-community/depth-anything-v2-small';
+const MAX_EDGE = 960;
+const params = new URLSearchParams(location.search);
+const logEl = document.getElementById('log');
+const grid = document.getElementById('grid');
+const status = window.__depthStatus = { done: [], failed: [], method: null, finished: false, errors: [] };
+const log = (m) => { logEl.textContent += m + '\n'; console.log(m); };
+
+// ---------- grayscale PNG encoder (color type 0, 8-bit) ----------
+const CRC_TABLE = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(bytes) { let c = 0xffffffff; for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xff] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; }
+function chunk(type, data) {
+  const out = new Uint8Array(12 + data.length); const dv = new DataView(out.buffer);
+  dv.setUint32(0, data.length); for (let i = 0; i < 4; i++) out[4 + i] = type.charCodeAt(i);
+  out.set(data, 8); dv.setUint32(8 + data.length, crc32(out.subarray(4, 8 + data.length))); return out;
+}
+async function zlib(data) {
+  const cs = new CompressionStream('deflate');  // 'deflate' = zlib wrapper, as PNG requires
+  const buf = await new Response(new Blob([data]).stream().pipeThrough(cs)).arrayBuffer();
+  return new Uint8Array(buf);
+}
+async function encodeGrayPNG(gray, w, h) {
+  const raw = new Uint8Array((w + 1) * h);
+  for (let y = 0; y < h; y++) { raw[y * (w + 1)] = 0; raw.set(gray.subarray(y * w, y * w + w), y * (w + 1) + 1); }
+  const ihdr = new Uint8Array(13); const dv = new DataView(ihdr.buffer);
+  dv.setUint32(0, w); dv.setUint32(4, h); ihdr[8] = 8; ihdr[9] = 0; ihdr[10] = 0; ihdr[11] = 0; ihdr[12] = 0;
+  const parts = [new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', await zlib(raw)), chunk('IEND', new Uint8Array(0))];
+  return new Blob(parts, { type: 'image/png' });
+}
+
+// ---------- helpers ----------
+function loadImage(src) { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('load ' + src)); i.src = src; }); }
+function targetSize(w, h) { const s = Math.min(1, MAX_EDGE / Math.max(w, h)); return [Math.round(w * s), Math.round(h * s)]; }
+// draw a single-channel buffer (sw x sh) scaled to (tw x th) and read back as gray
+function resampleGray(src, sw, sh, tw, th, blurPx = 0) {
+  const c1 = new OffscreenCanvas(sw, sh); const x1 = c1.getContext('2d');
+  const id = x1.createImageData(sw, sh);
+  for (let i = 0; i < src.length; i++) { const v = src[i]; id.data[i * 4] = v; id.data[i * 4 + 1] = v; id.data[i * 4 + 2] = v; id.data[i * 4 + 3] = 255; }
+  x1.putImageData(id, 0, 0);
+  const c2 = new OffscreenCanvas(tw, th); const x2 = c2.getContext('2d');
+  x2.imageSmoothingEnabled = true; x2.imageSmoothingQuality = 'high';
+  if (blurPx) x2.filter = `blur(${blurPx}px)`;
+  x2.drawImage(c1, 0, 0, tw, th);
+  const d = x2.getImageData(0, 0, tw, th).data; const out = new Uint8Array(tw * th);
+  for (let i = 0; i < out.length; i++) out[i] = d[i * 4];
+  return out;
+}
+function stretch(arr) { // min-max normalise to 0..255 using 1st/99th percentiles
+  const hist = new Uint32Array(256); for (const v of arr) hist[v]++;
+  const n = arr.length; let lo = 0, hi = 255, acc = 0;
+  for (let i = 0; i < 256; i++) { acc += hist[i]; if (acc > n * 0.01) { lo = i; break; } }
+  acc = 0; for (let i = 255; i >= 0; i--) { acc += hist[i]; if (acc > n * 0.01) { hi = i; break; } }
+  const k = 255 / Math.max(1, hi - lo); const out = new Uint8Array(n);
+  for (let i = 0; i < n; i++) out[i] = Math.max(0, Math.min(255, Math.round((arr[i] - lo) * k)));
+  return out;
+}
+
+// ---------- heuristic fallback: vertical gradient + luminance + blur ----------
+function heuristicDepth(img, tw, th) {
+  const c = new OffscreenCanvas(tw, th); const x = c.getContext('2d');
+  x.drawImage(img, 0, 0, tw, th);
+  const d = x.getImageData(0, 0, tw, th).data; const g = new Uint8Array(tw * th);
+  for (let y = 0; y < th; y++) {
+    const grad = y / (th - 1);                       // bottom = near
+    for (let xx = 0; xx < tw; xx++) {
+      const i = y * tw + xx; const p = i * 4;
+      const lum = (0.2126 * d[p] + 0.7152 * d[p + 1] + 0.0722 * d[p + 2]) / 255;
+      const sky = Math.max(0, (d[p + 2] - d[p]) / 255) * (1 - grad); // bluish & high = far
+      const v = 0.78 * grad + 0.22 * (1 - lum) - 0.25 * sky;          // darker, lower = nearer
+      g[i] = Math.max(0, Math.min(255, Math.round(v * 255)));
+    }
+  }
+  return stretch(resampleGray(g, tw, th, tw, th, Math.max(2, Math.round(tw / 160))));
+}
+
+// ---------- main ----------
+async function save(name, blob) {
+  const r = await fetch('/save?name=' + encodeURIComponent(name), { method: 'POST', body: blob, headers: { 'Content-Type': 'image/png' } });
+  if (!r.ok) throw new Error('save ' + name + ': ' + r.status + ' ' + await r.text());
+}
+function show(id, img, gray, w, h) {
+  const f = document.createElement('figure');
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const id2 = c.getContext('2d').createImageData(w, h);
+  for (let i = 0; i < gray.length; i++) { id2.data[i * 4] = id2.data[i * 4 + 1] = id2.data[i * 4 + 2] = gray[i]; id2.data[i * 4 + 3] = 255; }
+  c.getContext('2d').putImageData(id2, 0, 0);
+  const cap = document.createElement('figcaption'); cap.textContent = id;
+  f.append(c, cap); grid.prepend(f);
+}
+
+async function run() {
+  let ids = await (await fetch('depth-jobs.json', { cache: 'no-store' })).json();
+  if (params.get('ids')) ids = params.get('ids').split(',');
+  let estimator = null; let method = params.get('method') === 'heuristic' ? 'heuristic' : 'dav2-small';
+  if (method === 'dav2-small') {
+    try {
+      log('loading transformers.js + ' + MODEL + ' …');
+      const { pipeline, env } = await import(TF_URL);
+      env.allowLocalModels = false;
+      const device = params.get('device') || 'wasm';
+      estimator = await pipeline('depth-estimation', MODEL, { device, dtype: 'fp32' });
+      log('model ready on ' + device);
+    } catch (e) {
+      log('transformers.js failed: ' + e.message + ' → heuristic fallback'); status.errors.push(String(e)); method = 'heuristic';
+    }
+  }
+  status.method = method;
+  for (const id of ids) {
+    const t0 = performance.now();
+    try {
+      const src = '../assets/photos/' + id + '.jpg';
+      const img = await loadImage(src);
+      const [tw, th] = targetSize(img.naturalWidth, img.naturalHeight);
+      let gray, used = method;
+      if (estimator) {
+        try {
+          const out = await estimator(new URL(src, location.href).href);
+          const dimg = out.depth;  // RawImage, 1 channel, near = bright
+          let data = dimg.data;
+          if (dimg.channels !== 1) { const g = new Uint8Array(dimg.width * dimg.height); for (let i = 0; i < g.length; i++) g[i] = data[i * dimg.channels]; data = g; }
+          gray = stretch(resampleGray(data, dimg.width, dimg.height, tw, th));
+        } catch (e) { log(id + ': model error ' + e.message + ' → heuristic'); used = 'heuristic'; }
+      }
+      if (!gray) { gray = heuristicDepth(img, tw, th); used = 'heuristic'; }
+      await save(id + '.png', await encodeGrayPNG(gray, tw, th));
+      show(id, img, gray, tw, th);
+      status.done.push({ id, method: used, w: tw, h: th });
+      log(`${id}  ${tw}x${th}  ${used}  ${Math.round(performance.now() - t0)} ms`);
+    } catch (e) {
+      status.failed.push(id); status.errors.push(id + ': ' + e.message); log('FAILED ' + id + ': ' + e.message);
+    }
+  }
+  status.finished = true;
+  log(`finished: ${status.done.length} ok, ${status.failed.length} failed`);
+}
+run();
+</script>
+</body>
+</html>

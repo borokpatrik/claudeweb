@@ -1,13 +1,17 @@
 import { SCENES } from './scenes.js';
 import { createEngine } from './engine.js';
 import { initSections } from './sections.js';
+import { initSvgAnims } from './svg-anim.js';
 import { initGallery } from './gallery.js';
-import { fillRenders } from './renders.js';
+import { initReviews } from './reviews.js';
+import { initModals } from './modal.js';
 
 // Content first: the page must work even if WebGL fails.
 initSections();
-initGallery(document.getElementById('galeria'), SCENES);
-fillRenders(document, SCENES);
+initSvgAnims();
+initGallery(document.getElementById('galeria'));
+initReviews(document.getElementById('velemenyek'));
+initModals();
 
 try {
   createEngine(document.getElementById('gl'), SCENES).start();

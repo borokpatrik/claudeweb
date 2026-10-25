@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=JetBrains+Mono:wght@400;500&display=swap">
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css?v=2">
   <script type="importmap">
   {
     "imports": {
@@ -55,6 +55,7 @@
           </ul>
         </li>
         <li><a class="nav-link" href="#galeria" data-nav="galeria">Galéria</a></li>
+        <li><a class="nav-link" href="#velemenyek" data-nav="velemenyek">Vélemények</a></li>
         <li><a class="nav-link" href="#kapcsolat" data-nav="kapcsolat">Kapcsolat</a></li>
       </ul>
       <a class="btn btn--pill btn--amber nav-cta" href="#kapcsolat">Ajánlatkérés</a>
@@ -66,7 +67,7 @@
     <!-- 1 ============ HERO (3D) ============ -->
     <section id="hero" class="section section--3d" data-scene="house" data-label="Kezdőlap" aria-labelledby="hero-title">
       <div class="wrap hero-inner">
-        <p class="sec-label" data-hero-item><span class="sec-num">01</span> / 08 · Alapkő Építőipari Kft.</p>
+        <p class="sec-label" data-hero-item><span class="sec-num">01</span> / 09 · Alapkő Építőipari Kft.</p>
         <h1 class="display hero-title" id="hero-title" data-split>
           <span class="ln"><span class="ln-i">Stabil alapokra</span></span>
           <span class="ln"><span class="ln-i"><em>építünk.</em></span></span>
@@ -86,7 +87,7 @@
     <section id="rolunk" class="section section--flat" data-label="Rólunk" aria-labelledby="rolunk-title">
       <div class="wrap rolunk-grid">
         <div class="rolunk-copy">
-          <p class="sec-label" data-reveal><span class="sec-num">02</span> / 08 · Rólunk</p>
+          <p class="sec-label" data-reveal><span class="sec-num">02</span> / 09 · Rólunk</p>
           <h2 class="display h2" id="rolunk-title" data-split>
             <span class="ln"><span class="ln-i">Kőről kőre,</span></span>
             <span class="ln"><span class="ln-i"><em>határidőre.</em></span></span>
@@ -99,6 +100,8 @@
             <div class="figure"><dt>év garancia</dt><dd><span data-count="10">10</span></dd></div>
           </dl>
         </div>
+
+        <div class="svg-slot svg-slot--ruler" data-svg="ruler" aria-hidden="true"></div>
 
         <figure class="drawing drawing--house">
           <svg class="draw-svg" id="svg-house" viewBox="0 0 520 420" role="img" aria-labelledby="svg-house-t">
@@ -149,7 +152,7 @@
     <section id="munkak" class="section section--3d" data-scene="crane" data-label="Előző munkák" aria-labelledby="munkak-title">
       <div class="wrap split-3d">
         <div class="copy-3d">
-          <p class="sec-label" data-reveal><span class="sec-num">03</span> / 08 · Előző munkák</p>
+          <p class="sec-label" data-reveal><span class="sec-num">03</span> / 09 · Előző munkák</p>
           <h2 class="display h2" id="munkak-title" data-split>
             <span class="ln"><span class="ln-i">Előző</span></span>
             <span class="ln"><span class="ln-i"><em>munkáink</em></span></span>
@@ -160,20 +163,20 @@
         <div class="float-block float-block--cards" data-repel>
           <ul class="work-cards">
             <li class="work-card">
-              <a href="#burkolas" class="work-link">
-                <span class="ph"><img data-render="tiles:0" width="800" height="600" alt="Frissen lerakott, nagyformátumú padlóburkolat" decoding="async"></span>
+              <a href="#burkolas" class="work-link" data-project="burkolas-budaors" aria-haspopup="dialog">
+                <span class="ph"><img data-photo="burkolas-budaors-1" src="assets/photos/thumbs/burkolas-budaors-1.jpg" srcset="assets/photos/thumbs/burkolas-budaors-1.jpg 640w, assets/photos/burkolas-budaors-1.jpg 1920w" sizes="(max-width: 640px) 92px, (max-width: 1100px) 30vw, 17vw" width="640" height="427" alt="Fürdőszoba nagyformátumú falburkolattal" loading="lazy" decoding="async"></span>
                 <span class="work-meta"><span class="work-num">04</span><span class="work-title">Burkolás</span><span class="work-sub">Fürdők, teraszok, ipari padlók</span></span>
               </a>
             </li>
             <li class="work-card">
-              <a href="#falazas" class="work-link">
-                <span class="ph"><img data-render="wall:0" width="800" height="600" alt="Épülő téglafal habarccal és kőműveskanállal" decoding="async"></span>
+              <a href="#falazas" class="work-link" data-project="falazas-erd" aria-haspopup="dialog">
+                <span class="ph"><img data-photo="falazas-erd-1" src="assets/photos/thumbs/falazas-erd-1.jpg" srcset="assets/photos/thumbs/falazas-erd-1.jpg 640w, assets/photos/falazas-erd-1.jpg 1920w" sizes="(max-width: 640px) 92px, (max-width: 1100px) 30vw, 17vw" width="640" height="427" alt="Épülő téglafal habarccal" loading="lazy" decoding="async"></span>
                 <span class="work-meta"><span class="work-num">05</span><span class="work-title">Falazás</span><span class="work-sub">Tégla, pórusbeton, kő</span></span>
               </a>
             </li>
             <li class="work-card">
-              <a href="#alapozas" class="work-link">
-                <span class="ph"><img data-render="rebar:0" width="800" height="600" alt="Alapárok vasszereléssel és zsaluzattal" decoding="async"></span>
+              <a href="#alapozas" class="work-link" data-project="alapozas-dunakeszi" aria-haspopup="dialog">
+                <span class="ph"><img data-photo="alapozas-dunakeszi-1" src="assets/photos/thumbs/alapozas-dunakeszi-1.jpg" srcset="assets/photos/thumbs/alapozas-dunakeszi-1.jpg 640w, assets/photos/alapozas-dunakeszi-1.jpg 1920w" sizes="(max-width: 640px) 92px, (max-width: 1100px) 30vw, 17vw" width="640" height="427" alt="Alapárok vasszereléssel és zsaluzattal" loading="lazy" decoding="async"></span>
                 <span class="work-meta"><span class="work-num">06</span><span class="work-title">Alapozás</span><span class="work-sub">Sáv-, lemez- és pontalap</span></span>
               </a>
             </li>
@@ -186,12 +189,13 @@
     <section id="burkolas" class="section section--flat section--light" data-label="Burkolás" aria-labelledby="burkolas-title">
       <div class="wrap trade-grid">
         <div class="trade-copy">
-          <p class="sec-label" data-reveal><span class="sec-num">04</span> / 08 · Burkolás</p>
+          <p class="sec-label" data-reveal><span class="sec-num">04</span> / 09 · Burkolás</p>
           <h2 class="display h2" id="burkolas-title" data-split>
             <span class="ln"><span class="ln-i">Burkolás,</span></span>
             <span class="ln"><span class="ln-i"><em>milliméterre.</em></span></span>
           </h2>
           <p class="body-text" data-reveal>Lézeres szintezés, kiegyenlített aljzat, egyenes fugák. Kerámia, gres, természetes kő és nagyformátumú lapok, beltérben és kültéren.</p>
+          <div class="svg-slot svg-slot--level" data-svg="level" aria-hidden="true"></div>
           <ul class="chips" data-stagger>
             <li>Aljzatkiegyenlítés</li><li>Kenhető vízszigetelés</li><li>120 × 120-as lapok</li><li>Fagyálló teraszburkolat</li>
           </ul>
@@ -218,9 +222,9 @@
         </figure>
 
         <div class="photo-row" data-photos>
-          <figure class="photo"><span class="ph"><img data-render="tiles:1" width="800" height="600" alt="Fürdőszoba nagyformátumú falburkolattal" loading="lazy" decoding="async"></span><figcaption>Fürdő · Budaörs</figcaption></figure>
-          <figure class="photo"><span class="ph"><img data-render="tiles:2" width="800" height="600" alt="Terasz fagyálló kültéri lapokkal" loading="lazy" decoding="async"></span><figcaption>Terasz · Szentendre</figcaption></figure>
-          <figure class="photo"><span class="ph"><img data-render="tiles:3" width="800" height="600" alt="Lapvágó és felemelt burkolólapok munka közben" loading="lazy" decoding="async"></span><figcaption>Üzlethelyiség · Budapest XI.</figcaption></figure>
+          <figure class="photo"><button class="ph ph-btn" type="button" data-project="burkolas-budaors" aria-haspopup="dialog" aria-label="Fürdő, Budaörs – a projekt részletei"><img data-photo="burkolas-budaors-1" src="assets/photos/thumbs/burkolas-budaors-1.jpg" srcset="assets/photos/thumbs/burkolas-budaors-1.jpg 640w, assets/photos/burkolas-budaors-1.jpg 1920w" sizes="(max-width: 640px) 100vw, 32vw" width="640" height="427" alt="Fürdőszoba nagyformátumú falburkolattal" loading="lazy" decoding="async"><span class="ph-open" aria-hidden="true"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span></button><figcaption>Fürdő · Budaörs</figcaption></figure>
+          <figure class="photo"><button class="ph ph-btn" type="button" data-project="burkolas-szentendre" aria-haspopup="dialog" aria-label="Terasz, Szentendre – a projekt részletei"><img data-photo="burkolas-szentendre-1" src="assets/photos/thumbs/burkolas-szentendre-1.jpg" srcset="assets/photos/thumbs/burkolas-szentendre-1.jpg 640w, assets/photos/burkolas-szentendre-1.jpg 1920w" sizes="(max-width: 640px) 100vw, 32vw" width="640" height="427" alt="Terasz fagyálló kültéri lapokkal" loading="lazy" decoding="async"><span class="ph-open" aria-hidden="true"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span></button><figcaption>Terasz · Szentendre</figcaption></figure>
+          <figure class="photo"><button class="ph ph-btn" type="button" data-project="burkolas-budapest-xi" aria-haspopup="dialog" aria-label="Üzlethelyiség, Budapest XI. – a projekt részletei"><img data-photo="burkolas-budapest-xi-1" src="assets/photos/thumbs/burkolas-budapest-xi-1.jpg" srcset="assets/photos/thumbs/burkolas-budapest-xi-1.jpg 640w, assets/photos/burkolas-budapest-xi-1.jpg 1920w" sizes="(max-width: 640px) 100vw, 32vw" width="640" height="427" alt="Üzlethelyiség csiszolt gres padlóburkolattal" loading="lazy" decoding="async"><span class="ph-open" aria-hidden="true"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span></button><figcaption>Üzlethelyiség · Budapest XI.</figcaption></figure>
         </div>
       </div>
     </section>
@@ -229,7 +233,7 @@
     <section id="falazas" class="section section--3d" data-scene="wall" data-label="Falazás" aria-labelledby="falazas-title">
       <div class="wrap split-3d split-3d--media">
         <div class="copy-3d">
-          <p class="sec-label" data-reveal><span class="sec-num">05</span> / 08 · Falazás</p>
+          <p class="sec-label" data-reveal><span class="sec-num">05</span> / 09 · Falazás</p>
           <h2 class="display h2" id="falazas-title" data-split>
             <span class="ln"><span class="ln-i">Falak, amik</span></span>
             <span class="ln"><span class="ln-i"><em>generációkat</em> bírnak.</span></span>
@@ -239,9 +243,9 @@
 
         <div class="float-block float-block--media" data-repel>
           <div class="media-grid">
-            <figure class="photo photo--big"><span class="ph"><img data-render="wall:1" width="800" height="600" alt="Félkész téglafal sarokkiképzéssel" loading="lazy" decoding="async"></span><figcaption>Családi ház · Érd</figcaption></figure>
-            <figure class="photo"><span class="ph"><img data-render="wall:2" width="800" height="600" alt="Habarcsos láda és téglaraklap az építkezésen" loading="lazy" decoding="async"></span><figcaption>Társasház · Gödöllő</figcaption></figure>
-            <figure class="photo"><span class="ph"><img data-render="wall:3" width="800" height="600" alt="Kőműveskanál a friss habarcsrétegen" loading="lazy" decoding="async"></span><figcaption>Kerítésfal · Pomáz</figcaption></figure>
+            <figure class="photo photo--big"><button class="ph ph-btn" type="button" data-project="falazas-erd" aria-haspopup="dialog" aria-label="Családi ház, Érd – a projekt részletei"><img data-photo="falazas-erd-1" src="assets/photos/thumbs/falazas-erd-1.jpg" srcset="assets/photos/thumbs/falazas-erd-1.jpg 640w, assets/photos/falazas-erd-1.jpg 1920w" sizes="(max-width: 640px) 100vw, (max-width: 1100px) 55vw, 32vw" width="640" height="427" alt="Félkész téglafal sarokkiképzéssel" loading="lazy" decoding="async"><span class="ph-open" aria-hidden="true"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span></button><figcaption>Családi ház · Érd</figcaption></figure>
+            <figure class="photo"><button class="ph ph-btn" type="button" data-project="falazas-godollo" aria-haspopup="dialog" aria-label="Társasház, Gödöllő – a projekt részletei"><img data-photo="falazas-godollo-1" src="assets/photos/thumbs/falazas-godollo-1.jpg" srcset="assets/photos/thumbs/falazas-godollo-1.jpg 640w, assets/photos/falazas-godollo-1.jpg 1920w" sizes="(max-width: 640px) 50vw, (max-width: 1100px) 35vw, 20vw" width="640" height="427" alt="Társasház falazott szerkezete állvánnyal" loading="lazy" decoding="async"><span class="ph-open" aria-hidden="true"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span></button><figcaption>Társasház · Gödöllő</figcaption></figure>
+            <figure class="photo"><button class="ph ph-btn" type="button" data-project="falazas-pomaz" aria-haspopup="dialog" aria-label="Kerítésfal, Pomáz – a projekt részletei"><img data-photo="falazas-pomaz-1" src="assets/photos/thumbs/falazas-pomaz-1.jpg" srcset="assets/photos/thumbs/falazas-pomaz-1.jpg 640w, assets/photos/falazas-pomaz-1.jpg 1920w" sizes="(max-width: 640px) 50vw, (max-width: 1100px) 35vw, 20vw" width="640" height="427" alt="Kőburkolatú kerítésfal közelről" loading="lazy" decoding="async"><span class="ph-open" aria-hidden="true"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span></button><figcaption>Kerítésfal · Pomáz</figcaption></figure>
           </div>
         </div>
       </div>
@@ -251,12 +255,13 @@
     <section id="alapozas" class="section section--flat" data-label="Alapozás" aria-labelledby="alapozas-title">
       <div class="wrap trade-grid trade-grid--flip">
         <div class="trade-copy">
-          <p class="sec-label" data-reveal><span class="sec-num">06</span> / 08 · Alapozás</p>
+          <p class="sec-label" data-reveal><span class="sec-num">06</span> / 09 · Alapozás</p>
           <h2 class="display h2" id="alapozas-title" data-split>
             <span class="ln"><span class="ln-i">Minden az</span></span>
             <span class="ln"><span class="ln-i"><em>alapnál</em> dől el.</span></span>
           </h2>
           <p class="body-text" data-reveal>Talajmechanikai szakvélemény alapján tervezünk és kivitelezünk: földmunka, zsaluzás, vasszerelés, betonozás és szigetelés egy ütemtervben.</p>
+          <div class="svg-slot svg-slot--blueprint" data-svg="blueprint" aria-hidden="true"></div>
           <ul class="chips" data-stagger>
             <li>Sávalap</li><li>Lemezalap</li><li>Pontalap</li><li>Talajvíz elleni szigetelés</li>
           </ul>
@@ -304,9 +309,9 @@
         </figure>
 
         <div class="photo-row photo-row--stagger" data-photos>
-          <figure class="photo"><span class="ph"><img data-render="rebar:1" width="800" height="600" alt="Alapárok szerelt vasalással" loading="lazy" decoding="async"></span><figcaption>Sávalap · Dunakeszi</figcaption></figure>
-          <figure class="photo"><span class="ph"><img data-render="rebar:2" width="800" height="600" alt="Zsaluzat és betonacél kosár közelről" loading="lazy" decoding="async"></span><figcaption>Lemezalap · Budakeszi</figcaption></figure>
-          <figure class="photo"><span class="ph"><img data-render="rebar:3" width="800" height="600" alt="Betonozásra kész alaptest zsaluzattal" loading="lazy" decoding="async"></span><figcaption>Pontalap · Vác</figcaption></figure>
+          <figure class="photo"><button class="ph ph-btn" type="button" data-project="alapozas-dunakeszi" aria-haspopup="dialog" aria-label="Sávalap, Dunakeszi – a projekt részletei"><img data-photo="alapozas-dunakeszi-1" src="assets/photos/thumbs/alapozas-dunakeszi-1.jpg" srcset="assets/photos/thumbs/alapozas-dunakeszi-1.jpg 640w, assets/photos/alapozas-dunakeszi-1.jpg 1920w" sizes="(max-width: 640px) 100vw, 32vw" width="640" height="427" alt="Alapárok szerelt vasalással" loading="lazy" decoding="async"><span class="ph-open" aria-hidden="true"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span></button><figcaption>Sávalap · Dunakeszi</figcaption></figure>
+          <figure class="photo"><button class="ph ph-btn" type="button" data-project="alapozas-budakeszi" aria-haspopup="dialog" aria-label="Lemezalap, Budakeszi – a projekt részletei"><img data-photo="alapozas-budakeszi-1" src="assets/photos/thumbs/alapozas-budakeszi-1.jpg" srcset="assets/photos/thumbs/alapozas-budakeszi-1.jpg 640w, assets/photos/alapozas-budakeszi-1.jpg 1920w" sizes="(max-width: 640px) 100vw, 32vw" width="640" height="427" alt="Lemezalap vasszerelése betonozás előtt" loading="lazy" decoding="async"><span class="ph-open" aria-hidden="true"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span></button><figcaption>Lemezalap · Budakeszi</figcaption></figure>
+          <figure class="photo"><button class="ph ph-btn" type="button" data-project="alapozas-vac" aria-haspopup="dialog" aria-label="Pontalap, Vác – a projekt részletei"><img data-photo="alapozas-vac-1" src="assets/photos/thumbs/alapozas-vac-1.jpg" srcset="assets/photos/thumbs/alapozas-vac-1.jpg 640w, assets/photos/alapozas-vac-1.jpg 1920w" sizes="(max-width: 640px) 100vw, 32vw" width="640" height="427" alt="Betonozásra kész pontalap zsaluzattal" loading="lazy" decoding="async"><span class="ph-open" aria-hidden="true"><svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span></button><figcaption>Pontalap · Vác</figcaption></figure>
         </div>
       </div>
     </section>
@@ -314,19 +319,68 @@
     <!-- 7 ============ GALÉRIA ============ -->
     <section id="galeria" class="section section--flat section--gallery" data-label="Galéria" aria-labelledby="galeria-title">
       <div class="wrap gallery-head">
-        <p class="sec-label" data-reveal><span class="sec-num">07</span> / 08 · Galéria</p>
-        <h2 class="display h2" id="galeria-title" data-split>
-          <span class="ln"><span class="ln-i">Munka <em>közben.</em></span></span>
-        </h2>
+        <div class="gallery-head-copy">
+          <p class="sec-label" data-reveal><span class="sec-num">07</span> / 09 · Galéria</p>
+          <h2 class="display h2" id="galeria-title" data-split>
+            <span class="ln"><span class="ln-i">Munka <em>közben.</em></span></span>
+          </h2>
+        </div>
+        <div class="svg-slot svg-slot--frame" data-svg="frame" aria-hidden="true"></div>
       </div>
       <div class="gallery-rows"></div>
+    </section>
+
+    <!-- 8 ============ VÉLEMÉNYEK ============ -->
+    <section id="velemenyek" class="section section--flat section--reviews" data-label="Vélemények" aria-labelledby="velemenyek-title">
+      <div class="wrap reviews-grid">
+        <div class="reviews-head">
+          <div class="svg-slot svg-slot--quote-stars" data-svg="quote-stars" aria-hidden="true"></div>
+          <div class="reviews-head-copy">
+            <p class="sec-label" data-reveal><span class="sec-num">08</span> / 09 · Vélemények</p>
+            <h2 class="display h2" id="velemenyek-title" data-split>
+              <span class="ln"><span class="ln-i">Akik már</span></span>
+              <span class="ln"><span class="ln-i"><em>ránk bízták.</em></span></span>
+            </h2>
+            <p class="body-text" data-reveal>Néhány szó azoktól, akiknek az elmúlt években fürdőt burkoltunk, házat falaztunk vagy alapot öntöttünk.</p>
+          </div>
+        </div>
+
+        <div class="reviews-slider" data-reviews>
+          <!-- js/reviews.js fills .review-track; this static card is the no-JS fallback -->
+          <div class="review-viewport" role="region" aria-roledescription="carousel" aria-label="Ügyfélvélemények">
+            <div class="review-track">
+              <article class="review-card is-active" data-index="0">
+                <p class="review-stars" role="img" aria-label="5 csillagból 5"><svg viewBox="0 0 100 20" width="100" height="20" aria-hidden="true"><path fill="currentColor" d="M10 1.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8L10 14.9l-5.2 2.7 1-5.8L1.6 7.7l5.8-.8zM30 1.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8L30 14.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8zM50 1.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8L50 14.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8zM70 1.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8L70 14.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8zM90 1.6l2.6 5.3 5.8.8-4.2 4.1 1 5.8L90 14.9l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z"/></svg></p>
+                <blockquote class="review-text"><p>Pontosan azt kaptuk, amit az első bejáráson megbeszéltünk: tiszta munkaterület, napi egyeztetés, határidőre átadott ház.</p></blockquote>
+                <p class="review-name">Kovács Péter</p>
+                <p class="review-meta">Érd · Családi ház falazása</p>
+              </article>
+            </div>
+          </div>
+          <div class="review-controls" hidden>
+            <button class="review-arrow" type="button" data-review-prev aria-label="Előző vélemény">
+              <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><path d="M12.5 4.5 7 10l5.5 5.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="review-dots" role="group" aria-label="Vélemény kiválasztása"></div>
+            <button class="review-arrow" type="button" data-review-next aria-label="Következő vélemény">
+              <svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true"><path d="M7.5 4.5 13 10l-5.5 5.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <button class="review-play" type="button" data-review-play hidden>
+              <svg class="i-pause" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M5 3.5v9M11 3.5v9" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+              <svg class="i-play" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M5 3.2v9.6L12.6 8z" fill="currentColor"/></svg>
+              <span class="review-play-label">Automatikus lapozás szüneteltetése</span>
+            </button>
+          </div>
+          <p class="sr-only review-live" aria-live="polite" aria-atomic="true"></p>
+        </div>
+      </div>
     </section>
 
     <!-- 8 ============ KAPCSOLAT (3D) ============ -->
     <section id="kapcsolat" class="section section--3d" data-scene="blocks" data-label="Kapcsolat" aria-labelledby="kapcsolat-title">
       <div class="wrap split-3d split-3d--form">
         <div class="copy-3d">
-          <p class="sec-label" data-reveal><span class="sec-num">08</span> / 08 · Kapcsolat</p>
+          <p class="sec-label" data-reveal><span class="sec-num">09</span> / 09 · Kapcsolat</p>
           <h2 class="display h2" id="kapcsolat-title" data-split>
             <span class="ln"><span class="ln-i">Kérjen</span></span>
             <span class="ln"><span class="ln-i"><em>ajánlatot.</em></span></span>
@@ -407,7 +461,8 @@
       <li><a href="#falazas" data-pill="falazas"><span>05</span>Falazás</a></li>
       <li><a href="#alapozas" data-pill="alapozas"><span>06</span>Alapozás</a></li>
       <li><a href="#galeria" data-pill="galeria"><span>07</span>Galéria</a></li>
-      <li><a href="#kapcsolat" data-pill="kapcsolat"><span>08</span>Kapcsolat</a></li>
+      <li><a href="#velemenyek" data-pill="velemenyek"><span>08</span>Vélemények</a></li>
+      <li><a href="#kapcsolat" data-pill="kapcsolat"><span>09</span>Kapcsolat</a></li>
     </ul>
     <button class="pill-btn" type="button" aria-expanded="false" aria-controls="pill-menu" aria-label="Szakaszok: Kezdőlap">
       <span class="pill-dot" aria-hidden="true"></span>
