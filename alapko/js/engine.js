@@ -8,8 +8,8 @@
 //                three yaws), placed at the section's anchor on the landscape's ground, lit to match
 //                the photo (sun side/colour estimated from the sky) and slightly fogged by distance.
 //   near layer - a second photo, only its lower part (depth > ~0.45), in front of the object.
-// Points are tiny squares of 1-2 device px on a regular screen grid, so the frame reads as an
-// image made of light. Everything is in one buffer, so section changes morph the whole composition.
+// Points are soft round dots of varied size over a flat dark gradient (no sky points), so the frame
+// reads as one painterly image. Everything is in one buffer, so section changes morph the whole composition.
 //
 // All heavy work (manifest/blob fetch, createImageBitmap decode with resize, getImageData on an
 // offscreen 2D canvas, object renders + readback, typed-array builds) runs as an async job that
@@ -23,10 +23,10 @@ const TAN = Math.tan((FOV * DEG) / 2);
 const CAM_DIST = 3.2;                 // camera orbit radius; the object sits near the pivot
 const D_NEAR = 0.5 * CAM_DIST;        // far-layer depth 1 (white) -> this distance from the camera
 const D_FAR = 2.4 * CAM_DIST;         // far-layer depth 0 (sky)
-const MARGIN_Y = 0.12;                // landscape overscan (fraction of half height), for parallax
+const MARGIN_Y = 0.28;                // landscape overscan (fraction of half height), for parallax + scroll roll
 const SKY_D = 0.035;                  // depth below this is sky (DAv2 maps: sky is ~0, far hills 0.05+)
-const SKY_KEEP = 0.28;                // share of sky pixels kept as haze
-const NEAR_TOP = 0.58;                // near layer starts at this normalized screen y
+const SKY_KEEP = 0;                   // sky pixels dropped: the flat gradient behind the canvas is the sky
+const ROLL_MAX = 30 * DEG;            // section tilt when it is a full viewport away from centre
 const BAKE_YAWS = [0, 55 * DEG, -55 * DEG];
 const MORPH_DUR = 1.3;
 const DISPERSE_DUR = 0.9;
@@ -37,9 +37,9 @@ const MANIFEST_URL = 'assets/photos/manifest.json';
 
 // point budgets per GPU tier (object / far landscape / near landscape)
 const TIERS = {
-  high: { obj: 60000, far: 150000, near: 40000, bakeW: 480, glow: true },  // 250k, discrete GPUs
-  mid: { obj: 30000, far: 70000, near: 20000, bakeW: 380, glow: false },   // 120k, integrated
-  low: { obj: 15000, far: 35000, near: 10000, bakeW: 280, glow: false },   //  60k, mobile/software
+  high: { obj: 22000, far: 70000, near: 18000, bakeW: 480, glow: true },   // 110k, discrete GPUs
+  mid: { obj: 14000, far: 40000, near: 10000, bakeW: 380, glow: false },   //  64k, integrated
+  low: { obj: 9000, far: 24000, near: 7000, bakeW: 280, glow: false },     //  40k, mobile/software
 };
 
 /* ------------------------------------------------------------------ */
@@ -74,9 +74,7 @@ uniform float uStagger;
 uniform float uArc;
 uniform float uFade;      // 1 = reduced-motion cross-fade instead of flight
 uniform float uShimmer;   // 0 under reduced motion
-uniform float uPx;        // point size, device px
-uniform float uGrid;      // screen pixel-grid pitch, device px (points snap to its cells)
-uniform vec2 uRes;        // drawing buffer size, device px
+uniform float uPx;        // base point size, device px
 uniform float uSizeMul;
 uniform vec2 uViewport;   // CSS px
 uniform vec4 uRect0;      // repel rects: centre xy, half size zw (CSS px); z <= 0 = off
@@ -130,22 +128,20 @@ void main() {
   vec2 push = repel(sp, uRect0, inside) + repel(sp, uRect1, inside);
   clip.xy += push * uRepel * vec2(2.0 / uViewport.x, -2.0 / uViewport.y) * clip.w;
 
-  // snap to the screen grid: every point is one crisp square of an LED-like pixel matrix
-  vec2 pix = (clip.xy / clip.w * 0.5 + 0.5) * uRes;
-  pix = floor(pix / uGrid) * uGrid + 0.5 * uPx;
-  clip.xy = (pix / uRes * 2.0 - 1.0) * clip.w;
-
   vCol = vec4(c.rgb * sh, c.a * (1.0 - 0.3 * inside));
-  gl_PointSize = max(uPx * uSizeMul, 1.0);
+  // varied dot sizes give the painterly, scattered look (no grid)
+  gl_PointSize = max(uPx * uSizeMul * (0.55 + 0.9 * fract(seed * 13.7)), 1.0);
   gl_Position = vCol.a < 0.003 ? vec4(2.0, 2.0, 2.0, 1.0) : clip;
 }`;
 
-// a plain square: at 1-2 device px a point is just a crisp pixel
+// soft round dot
 const POINT_FRAG = /* glsl */ `
 varying vec4 vCol;
 void main() {
-  if (vCol.a < 0.01) discard;
-  gl_FragColor = vCol;
+  vec2 c = gl_PointCoord * 2.0 - 1.0;
+  float d = dot(c, c);
+  if (d > 1.0 || vCol.a < 0.01) discard;
+  gl_FragColor = vec4(vCol.rgb, vCol.a * (1.0 - d * d));
 }`;
 
 // soft additive halo, only on bright points (lights, sunlit faces, the sky glow)
@@ -247,9 +243,7 @@ export function createEngine(canvas, SCENES) {
     uArc: { value: 0 },
     uFade: { value: reduced ? 1 : 0 },
     uShimmer: { value: reduced ? 0 : 1 },
-    uPx: { value: 2 },
-    uGrid: { value: 3 },
-    uRes: { value: new THREE.Vector2(1, 1) },
+    uPx: { value: 3 },
     uViewport: { value: new THREE.Vector2(1, 1) },
     uRect0: { value: new THREE.Vector4() },
     uRect1: { value: new THREE.Vector4() },
@@ -270,7 +264,7 @@ export function createEngine(canvas, SCENES) {
 
   if (T.glow) {
     const glowMat = new THREE.ShaderMaterial({
-      uniforms: { ...U, uSizeMul: { value: 3.2 }, uGlow: { value: 0.11 } },
+      uniforms: { ...U, uSizeMul: { value: 2.2 }, uGlow: { value: 0.11 } },
       vertexShader: POINT_VERT,
       fragmentShader: GLOW_FRAG,
       transparent: true,
@@ -606,9 +600,9 @@ export function createEngine(canvas, SCENES) {
     const pl = def.place || { x: 0.5, base: 0.8, h: 0.5 };
     const portrait = asp < 1;
     const ax = portrait ? 0.5 : pl.x;
-    // portrait: the copy fills the lower half, so the object stands on the horizon above it
-    const hFrac = portrait ? Math.min(0.24, pl.h * 0.7) : pl.h;
-    const base = portrait ? Math.min(pl.base, 0.42) : pl.base;
+    // foreground: the object stands low in the frame on the near ground, which overlaps its base
+    const hFrac = portrait ? Math.min(0.3, pl.h * 0.8) : Math.min(0.7, pl.h * 1.2);
+    const base = portrait ? 0.7 : Math.min(0.94, pl.base + 0.1);
     const axh = (2 * ax - 1) * asp, byh = 1 - 2 * base;
     let Dobj = CAM_DIST;
     if (far) {
@@ -645,10 +639,11 @@ export function createEngine(canvas, SCENES) {
       // the object's back sits at the ground depth under the anchor, so it is never behind the land
       const xm = (b.x0 + b.x1) / 2, zm = b.z0;
       const fa = far ? 0.08 + fogAt(Dobj) * 0.7 : 0;
+      const jit = (2 / BAKE_H) * sc; // one bake cell: breaks up the render's pixel lattice
       for (let k = 0; k < nObj; k++) {
         if ((k & 4095) === 0) await checkpoint();
-        const x = (obj.pos[k * 3] - xm) * sc + X;
-        const y = (obj.pos[k * 3 + 1] - b.y0) * sc + Yb;
+        const x = (obj.pos[k * 3] - xm) * sc + X + (rnd() - 0.5) * jit;
+        const y = (obj.pos[k * 3 + 1] - b.y0) * sc + Yb + (rnd() - 0.5) * jit;
         const z = (obj.pos[k * 3 + 2] - zm) * sc + Z;
         pos[n * 3] = x; pos[n * 3 + 1] = y; pos[n * 3 + 2] = z;
         for (let c = 0; c < 3; c++) col[n * 4 + c] = obj.col[k * 4 + c] * (1 - fa) + fog[c] * 255 * fa;
@@ -681,6 +676,7 @@ export function createEngine(canvas, SCENES) {
       }
       tag(id + ':sheet');
       const keep = Math.min(1, budget / Math.max(1, cand));
+      const cellX = (2 * ai * h0) / gw, cellY = (2 * h0) / gh;
       const nearThin = !isNear && near;
       const bright = isNear ? 0.92 : 0.95;
       const end = n + budget;
@@ -714,7 +710,9 @@ export function createEngine(canvas, SCENES) {
           if (isNear && rnd() > keep) continue;
           if (a < 0.02) continue;
           const fa = Math.min(0.85, fogAt(D) + 0.45 * sky);
-          pos[n * 3] = xh * TAN * D; pos[n * 3 + 1] = yh * TAN * D; pos[n * 3 + 2] = CAM_DIST - D;
+          // jitter within the sample's cell: scattered dots, not a visible pixel lattice
+          const jx = xh + (rnd() - 0.5) * cellX, jy = yh + (rnd() - 0.5) * cellY;
+          pos[n * 3] = jx * TAN * D; pos[n * 3 + 1] = jy * TAN * D; pos[n * 3 + 2] = CAM_DIST - D;
           // copy sits on the left in every 3D section: dim the land there so text stays legible
           const xs = (xh / asp0 + 1) / 2;
           const lb = bright * (0.5 + 0.5 * smooth(0.04, 0.52, xs));
@@ -725,13 +723,16 @@ export function createEngine(canvas, SCENES) {
         }
       }
     }
-    const nearTop = Math.max(NEAR_TOP, base - 0.04); // frame the bottom, never cover the object
+    const nearTop = base - 0.06; // grass overlaps the object's base, so it stands in the land instead of floating
     let nFar = 0, nNear = 0;
     if (far) { const s = n; await sheet(far, false, T.far + (near ? 0 : T.near)); nFar = n - s; }
     if (near) { const s = n; await sheet(near, true, T.near); nNear = n - s; }
 
     stats.clouds[id] = { obj: nObj, far: nFar, near: nNear, total: n, farId: far && far.id, nearId: near && near.id, sunSide: lit ? +lit.env.sunSide.toFixed(2) : null, ms: Math.round(performance.now() - t0) };
-    return { id, n, pos, col, del };
+    // flat dark gradient in the landscape's own sky tone stands in for the sky
+    const tone = (k) => fog.map((c) => Math.round(c * 255 * k)).join(',');
+    const bg = `linear-gradient(180deg, rgb(${tone(0.36)}) 0%, rgb(${tone(0.16)}) 55%, rgb(${tone(0.07)}) 100%)`;
+    return { id, n, pos, col, del, bg };
   }
 
   /* ---------- bake queue ---------- */
@@ -852,6 +853,7 @@ export function createEngine(canvas, SCENES) {
       morphDur = reduced ? 0.45 : MORPH_DUR;
       U.uArc.value = n0 === 0 ? 0 : 0.22;
       shown = cloud.id;
+      if (cloud.bg) canvas.style.background = cloud.bg;
     } else {
       if (n0 === 0) { shown = null; return; }
       for (let i = 0; i < n0; i++) {
@@ -885,7 +887,7 @@ export function createEngine(canvas, SCENES) {
   /* ---------- input / motion ---------- */
   let mx = 0, my = 0, cmx = 0, cmy = 0;
   let idleFor = 0, idleAmp = 0, idlePhase = 0;
-  let lastScroll = scrollY, vel = 0, sr = 0, sv = 0;
+  let roll = 0;
   const poke = () => { idleFor = 0; };
 
   function onPointer(e) {
@@ -919,10 +921,7 @@ export function createEngine(canvas, SCENES) {
     camera.aspect = cssW / cssH;
     camera.updateProjectionMatrix();
     U.uViewport.value.set(cssW, cssH);
-    const pr = renderer.getPixelRatio();
-    renderer.getDrawingBufferSize(U.uRes.value);
-    U.uGrid.value = pr > 1.25 ? 4 : 3;
-    U.uPx.value = pr > 1.25 ? 3 : 2;
+    U.uPx.value = 3 * renderer.getPixelRatio();
     // rotation limits so the overscanned landscape edges stay off screen (sky at ~0.58 lever)
     const asp = camera.aspect;
     yawMax = clamp((marginX(asp) * TAN * asp) / 0.58, 0.03, 0.2);
@@ -968,22 +967,22 @@ export function createEngine(canvas, SCENES) {
     }
     U.uMorph.value = morph;
 
-    // scroll velocity -> spring-damped yaw in the scroll direction
-    const y = scrollY;
-    const vInst = (y - lastScroll) / dt;
-    lastScroll = y;
-    vel += (vInst - vel) * Math.min(1, dt * 12);
-    const lim = yawMax * 0.45;
-    const target = reduced ? 0 : clamp(vel * 0.00012, -lim, lim);
-    sv += ((target - sr) * 42 - sv * 9.5) * dt;
-    sr += sv * dt;
+    // rolling: the section's offset from the viewport centre tilts the scene around X, top toward
+    // the viewer while it enters from below, receding as it scrolls away (±ROLL_MAX a viewport off)
+    let rollT = 0;
+    if (active && !reduced) {
+      const r = active.getBoundingClientRect();
+      rollT = clamp((r.top + r.height / 2 - cssH / 2) / cssH, -1, 1) * ROLL_MAX;
+    }
+    roll += (rollT - roll) * (1 - Math.exp(-dt * 8));
+    spin.rotation.x = roll;
 
     // idle sway after ~6 s without input
     idleFor += dt;
     const wantIdle = !reduced && idleFor > 6 ? 1 : 0;
     idleAmp += (wantIdle - idleAmp) * (1 - Math.exp(-dt * (wantIdle ? 0.6 : 2.5)));
     if (idleAmp > 0.001) idlePhase += dt * ((Math.PI * 2) / 26);
-    spin.rotation.y = sr + idleAmp * yawMax * 0.3 * Math.sin(idlePhase);
+    spin.rotation.y = idleAmp * yawMax * 0.3 * Math.sin(idlePhase);
 
     // camera: mouse parallax orbit around the object plane (near layer and sky move opposite)
     if (touch) {
