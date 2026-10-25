@@ -1,0 +1,62 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "walkthrough/index.html"
+        ],
+        "createdAt": "2026-10-25T15:48:01.261Z",
+        "reason": "user confirmed: keep amber glows on progress bar, loader dot and active marker to echo the scene bloom"
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "walkthrough/index.html"
+        ],
+        "createdAt": "2026-10-25T16:10:30.443Z",
+        "reason": "Claude: the only headings in this file sit in the visually hidden .sr-only screen-reader copy of the boards; visible type lives in the WebGL boards and HUD"
+      },
+      {
+        "rule": "broken-image",
+        "value": "*",
+        "files": [
+          "alapko/index.html"
+        ],
+        "createdAt": "2026-10-25T19:04:05.741Z",
+        "reason": "Claude: img[data-render] src is filled at runtime by js/renders.js with rendered stills (per CONTRACT.md); placeholder .ph shows meanwhile"
+      },
+      {
+        "rule": "buried-raster",
+        "value": "*",
+        "files": [
+          "alapko/index.html"
+        ],
+        "createdAt": "2026-10-25T19:04:05.929Z",
+        "reason": "Claude: opacity 0 is the pre-load state; renders.js/sections.js fade the img in once its runtime src loads"
+      },
+      {
+        "rule": "marquee",
+        "value": "*",
+        "files": [
+          "alapko/index.html"
+        ],
+        "createdAt": "2026-10-25T19:04:11.355Z",
+        "reason": "Claude: user asked for wild motion and scrolling elements; the only marquee is the decorative aria-hidden ticker, stopped under reduced motion"
+      },
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "alapko/index.html"
+        ],
+        "createdAt": "2026-10-25T19:08:19.526Z",
+        "reason": "Claude: checked in browser at 1440 and 375; flagged items are intentional edge-to-edge media (float-block photo grids, full-bleed gallery rows, caption overlays) and divider-list rows, no cramped text"
+      }
+    ]
+  }
+}

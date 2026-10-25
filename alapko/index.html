@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Alapkő Építőipari Kft. · Burkolás, falazás, alapozás</title>
+  <meta name="description" content="Alapkő Építőipari Kft.: burkolás, falazás és alapozás egy kézből, saját brigádokkal, garanciával.">
+  <meta name="theme-color" content="#0b0c0f">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,400;0,500;0,600;0,700;0,800;1,500&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/",
+      "gsap": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/index.js",
+      "gsap/ScrollTrigger": "https://cdn.jsdelivr.net/npm/gsap@3.12.5/ScrollTrigger.js"
+    }
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Ugrás a tartalomra</a>
+
+  <canvas id="gl" aria-hidden="true"></canvas>
+
+  <!-- ============ HEADER ============ -->
+  <header class="site-header" id="site-header">
+    <a class="brand" href="#hero" aria-label="Alapkő Építőipari Kft. – kezdőlap">
+      <img src="assets/logo.svg" width="28" height="28" alt="">
+      <span class="brand-word">Alapkő</span>
+    </a>
+
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav">
+      <span class="nav-toggle-bars" aria-hidden="true"><span></span><span></span></span>
+      <span class="nav-toggle-text">Menü</span>
+    </button>
+
+    <nav class="site-nav" id="site-nav" aria-label="Fő navigáció">
+      <ul class="nav-list">
+        <li><a class="nav-link" href="#hero" data-nav="hero">Kezdőlap</a></li>
+        <li><a class="nav-link" href="#rolunk" data-nav="rolunk">Rólunk</a></li>
+        <li class="has-dd" data-dropdown>
+          <button class="nav-link dd-btn" type="button" aria-expanded="false" aria-controls="dd-munkak" data-nav="munkak">
+            Előző munkák
+            <svg class="dd-chev" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <ul class="dd-menu" id="dd-munkak">
+            <li><a class="dd-link" href="#burkolas" data-nav="burkolas"><span class="dd-num">04</span>Burkolás<span class="dd-sub">Fürdők, teraszok, ipari padlók</span></a></li>
+            <li><a class="dd-link" href="#falazas" data-nav="falazas"><span class="dd-num">05</span>Falazás<span class="dd-sub">Tégla, pórusbeton, kő</span></a></li>
+            <li><a class="dd-link" href="#alapozas" data-nav="alapozas"><span class="dd-num">06</span>Alapozás<span class="dd-sub">Sáv-, lemez- és pontalap</span></a></li>
+          </ul>
+        </li>
+        <li><a class="nav-link" href="#galeria" data-nav="galeria">Galéria</a></li>
+        <li><a class="nav-link" href="#kapcsolat" data-nav="kapcsolat">Kapcsolat</a></li>
+      </ul>
+      <a class="btn btn--pill btn--amber nav-cta" href="#kapcsolat">Ajánlatkérés</a>
+    </nav>
+  </header>
+
+  <main id="main">
+
+    <!-- 1 ============ HERO (3D) ============ -->
+    <section id="hero" class="section section--3d" data-scene="house" data-label="Kezdőlap" aria-labelledby="hero-title">
+      <div class="wrap hero-inner">
+        <p class="sec-label" data-hero-item><span class="sec-num">01</span> / 08 · Alapkő Építőipari Kft.</p>
+        <h1 class="display hero-title" id="hero-title" data-split>
+          <span class="ln"><span class="ln-i">Stabil alapokra</span></span>
+          <span class="ln"><span class="ln-i"><em>építünk.</em></span></span>
+        </h1>
+        <p class="lead hero-sub" data-hero-item>Burkolás, falazás és alapozás egy kézből: pontos ütemterv, tiszta munkaterület, tíz év garancia.</p>
+        <div class="hero-actions" data-hero-item>
+          <a class="btn btn--pill btn--amber btn--lg" href="#kapcsolat">
+            Ajánlatkérés
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </a>
+          <a class="btn btn--pill btn--ghost btn--lg" href="#munkak">Előző munkáink</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2 ============ RÓLUNK ============ -->
+    <section id="rolunk" class="section section--flat" data-label="Rólunk" aria-labelledby="rolunk-title">
+      <div class="wrap rolunk-grid">
+        <div class="rolunk-copy">
+          <p class="sec-label" data-reveal><span class="sec-num">02</span> / 08 · Rólunk</p>
+          <h2 class="display h2" id="rolunk-title" data-split>
+            <span class="ln"><span class="ln-i">Kőről kőre,</span></span>
+            <span class="ln"><span class="ln-i"><em>határidőre.</em></span></span>
+          </h2>
+          <p class="body-text" data-reveal>2008 óta építünk családi házakat, társasházakat és üzlethelyiségeket Budapesten és Pest megyében. Saját brigádokkal dolgozunk, alvállalkozói lánc nélkül, így minden négyzetméterért mi felelünk.</p>
+          <dl class="figures">
+            <div class="figure"><dt>év a szakmában</dt><dd><span data-count="18">18</span></dd></div>
+            <div class="figure"><dt>átadott projekt</dt><dd><span data-count="240">240</span><span class="fig-suf">+</span></dd></div>
+            <div class="figure"><dt>fős saját csapat</dt><dd><span data-count="35">35</span></dd></div>
+            <div class="figure"><dt>év garancia</dt><dd><span data-count="10">10</span></dd></div>
+          </dl>
+        </div>
+
+        <figure class="drawing drawing--house">
+          <svg class="draw-svg" id="svg-house" viewBox="0 0 520 420" role="img" aria-labelledby="svg-house-t">
+            <title id="svg-house-t">Kétszintes családi ház homlokzati rajza, méretvonalakkal</title>
+            <g class="g-ground">
+              <line class="draw" pathLength="1" x1="10" y1="380" x2="510" y2="380"/>
+              <path class="draw thin" pathLength="1" d="M20 380l-10 12M50 380l-10 12M80 380l-10 12M110 380l-10 12M140 380l-10 12M170 380l-10 12M200 380l-10 12M230 380l-10 12M260 380l-10 12M290 380l-10 12M320 380l-10 12M350 380l-10 12M380 380l-10 12M410 380l-10 12M440 380l-10 12M470 380l-10 12M500 380l-10 12"/>
+              <rect class="draw accent" pathLength="1" x="92" y="360" width="356" height="20"/>
+            </g>
+            <g class="g-walls">
+              <rect class="draw" pathLength="1" x="100" y="240" width="340" height="120"/>
+              <rect class="draw" pathLength="1" x="60" y="130" width="290" height="110"/>
+              <rect class="draw" pathLength="1" x="48" y="118" width="314" height="12"/>
+              <rect class="fill" x="60" y="130" width="290" height="110"/>
+            </g>
+            <g class="g-windows">
+              <rect class="draw cool" pathLength="1" x="80" y="156" width="160" height="56"/>
+              <line class="draw cool thin" pathLength="1" x1="133" y1="156" x2="133" y2="212"/>
+              <line class="draw cool thin" pathLength="1" x1="186" y1="156" x2="186" y2="212"/>
+              <rect class="draw cool" pathLength="1" x="262" y="156" width="66" height="56"/>
+              <rect class="draw cool" pathLength="1" x="210" y="266" width="200" height="74"/>
+              <line class="draw cool thin" pathLength="1" x1="260" y1="266" x2="260" y2="340"/>
+              <line class="draw cool thin" pathLength="1" x1="310" y1="266" x2="310" y2="340"/>
+              <line class="draw cool thin" pathLength="1" x1="360" y1="266" x2="360" y2="340"/>
+              <rect class="draw" pathLength="1" x="128" y="276" width="52" height="84"/>
+              <line class="draw thin" pathLength="1" x1="170" y1="316" x2="170" y2="324"/>
+            </g>
+            <g class="g-dims">
+              <path class="draw thin dim" pathLength="1" d="M48 96h314M48 90v12M362 90v12"/>
+              <path class="draw thin dim" pathLength="1" d="M478 118v262M472 118h12M472 380h12"/>
+              <text class="svg-label" x="205" y="88" text-anchor="middle">12,40 m</text>
+              <text class="svg-label" x="492" y="254" text-anchor="middle" transform="rotate(-90 492 254)">7,20 m</text>
+            </g>
+          </svg>
+          <figcaption class="draw-cap">Homlokzat · M 1:100</figcaption>
+        </figure>
+      </div>
+
+      <div class="ticker" aria-hidden="true">
+        <div class="ticker-track">
+          <span>Burkolás</span><i></i><span>Falazás</span><i></i><span>Alapozás</span><i></i><span>Generálkivitelezés</span><i></i>
+          <span>Burkolás</span><i></i><span>Falazás</span><i></i><span>Alapozás</span><i></i><span>Generálkivitelezés</span><i></i>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3 ============ MUNKÁK (3D) ============ -->
+    <section id="munkak" class="section section--3d" data-scene="crane" data-label="Előző munkák" aria-labelledby="munkak-title">
+      <div class="wrap split-3d">
+        <div class="copy-3d">
+          <p class="sec-label" data-reveal><span class="sec-num">03</span> / 08 · Előző munkák</p>
+          <h2 class="display h2" id="munkak-title" data-split>
+            <span class="ln"><span class="ln-i">Előző</span></span>
+            <span class="ln"><span class="ln-i"><em>munkáink</em></span></span>
+          </h2>
+          <p class="body-text" data-reveal>Három szakág, egy csapat. Nézze meg, hogyan dolgozunk: a burkolat síkjától az alaplemez vasalásáig.</p>
+        </div>
+
+        <div class="float-block float-block--cards" data-repel>
+          <ul class="work-cards">
+            <li class="work-card">
+              <a href="#burkolas" class="work-link">
+                <span class="ph"><img data-render="tiles:0" width="800" height="600" alt="Frissen lerakott, nagyformátumú padlóburkolat" decoding="async"></span>
+                <span class="work-meta"><span class="work-num">04</span><span class="work-title">Burkolás</span><span class="work-sub">Fürdők, teraszok, ipari padlók</span></span>
+              </a>
+            </li>
+            <li class="work-card">
+              <a href="#falazas" class="work-link">
+                <span class="ph"><img data-render="wall:0" width="800" height="600" alt="Épülő téglafal habarccal és kőműveskanállal" decoding="async"></span>
+                <span class="work-meta"><span class="work-num">05</span><span class="work-title">Falazás</span><span class="work-sub">Tégla, pórusbeton, kő</span></span>
+              </a>
+            </li>
+            <li class="work-card">
+              <a href="#alapozas" class="work-link">
+                <span class="ph"><img data-render="rebar:0" width="800" height="600" alt="Alapárok vasszereléssel és zsaluzattal" decoding="async"></span>
+                <span class="work-meta"><span class="work-num">06</span><span class="work-title">Alapozás</span><span class="work-sub">Sáv-, lemez- és pontalap</span></span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4 ============ BURKOLÁS ============ -->
+    <section id="burkolas" class="section section--flat section--light" data-label="Burkolás" aria-labelledby="burkolas-title">
+      <div class="wrap trade-grid">
+        <div class="trade-copy">
+          <p class="sec-label" data-reveal><span class="sec-num">04</span> / 08 · Burkolás</p>
+          <h2 class="display h2" id="burkolas-title" data-split>
+            <span class="ln"><span class="ln-i">Burkolás,</span></span>
+            <span class="ln"><span class="ln-i"><em>milliméterre.</em></span></span>
+          </h2>
+          <p class="body-text" data-reveal>Lézeres szintezés, kiegyenlített aljzat, egyenes fugák. Kerámia, gres, természetes kő és nagyformátumú lapok, beltérben és kültéren.</p>
+          <ul class="chips" data-stagger>
+            <li>Aljzatkiegyenlítés</li><li>Kenhető vízszigetelés</li><li>120 × 120-as lapok</li><li>Fagyálló teraszburkolat</li>
+          </ul>
+        </div>
+
+        <figure class="drawing drawing--tiles">
+          <svg class="draw-svg" id="svg-tiles" viewBox="0 0 450 400" role="img" aria-labelledby="svg-tiles-t">
+            <title id="svg-tiles-t">Burkolási kiosztás: hat-szor öt lapos rács, fugavonalakkal</title>
+            <g class="g-chalk">
+              <rect class="draw" pathLength="1" x="20" y="20" width="410" height="344"/>
+              <path class="draw thin dim" pathLength="1" d="M93 14v356M159 14v356M225 14v356M291 14v356M357 14v356"/>
+              <path class="draw thin dim" pathLength="1" d="M14 93h422M14 159h422M14 225h422M14 291h422"/>
+            </g>
+            <g class="g-tiles">
+<rect class="tile" x="30" y="30" width="60" height="60" rx="3" data-d="0"/><rect class="tile" x="96" y="30" width="60" height="60" rx="3" data-d="1"/><rect class="tile" x="162" y="30" width="60" height="60" rx="3" data-d="2"/><rect class="tile" x="228" y="30" width="60" height="60" rx="3" data-d="3"/><rect class="tile" x="294" y="30" width="60" height="60" rx="3" data-d="4"/><rect class="tile" x="360" y="30" width="60" height="60" rx="3" data-d="5"/>
+<rect class="tile" x="30" y="96" width="60" height="60" rx="3" data-d="1"/><rect class="tile" x="96" y="96" width="60" height="60" rx="3" data-d="2"/><rect class="tile" x="162" y="96" width="60" height="60" rx="3" data-d="3"/><rect class="tile" x="228" y="96" width="60" height="60" rx="3" data-d="4"/><rect class="tile" x="294" y="96" width="60" height="60" rx="3" data-d="5"/><rect class="tile" x="360" y="96" width="60" height="60" rx="3" data-d="6"/>
+<rect class="tile" x="30" y="162" width="60" height="60" rx="3" data-d="2"/><rect class="tile" x="96" y="162" width="60" height="60" rx="3" data-d="3"/><rect class="tile" x="162" y="162" width="60" height="60" rx="3" data-d="4"/><rect class="tile" x="228" y="162" width="60" height="60" rx="3" data-d="5"/><rect class="tile" x="294" y="162" width="60" height="60" rx="3" data-d="6"/><rect class="tile" x="360" y="162" width="60" height="60" rx="3" data-d="7"/>
+<rect class="tile" x="30" y="228" width="60" height="60" rx="3" data-d="3"/><rect class="tile" x="96" y="228" width="60" height="60" rx="3" data-d="4"/><rect class="tile" x="162" y="228" width="60" height="60" rx="3" data-d="5"/><rect class="tile" x="228" y="228" width="60" height="60" rx="3" data-d="6"/><rect class="tile" x="294" y="228" width="60" height="60" rx="3" data-d="7"/><rect class="tile" x="360" y="228" width="60" height="60" rx="3" data-d="8"/>
+<rect class="tile" x="30" y="294" width="60" height="60" rx="3" data-d="4"/><rect class="tile" x="96" y="294" width="60" height="60" rx="3" data-d="5"/><rect class="tile" x="162" y="294" width="60" height="60" rx="3" data-d="6"/><rect class="tile" x="228" y="294" width="60" height="60" rx="3" data-d="7"/><rect class="tile" x="294" y="294" width="60" height="60" rx="3" data-d="8"/><rect class="tile tile--key" x="360" y="294" width="60" height="60" rx="3" data-d="9"/>
+            </g>
+            <text class="svg-label" x="20" y="392">6 × 5 lap · 60 × 60 cm · 6 mm fuga</text>
+          </svg>
+          <figcaption class="draw-cap">Kiosztási terv</figcaption>
+        </figure>
+
+        <div class="photo-row" data-photos>
+          <figure class="photo"><span class="ph"><img data-render="tiles:1" width="800" height="600" alt="Fürdőszoba nagyformátumú falburkolattal" loading="lazy" decoding="async"></span><figcaption>Fürdő · Budaörs</figcaption></figure>
+          <figure class="photo"><span class="ph"><img data-render="tiles:2" width="800" height="600" alt="Terasz fagyálló kültéri lapokkal" loading="lazy" decoding="async"></span><figcaption>Terasz · Szentendre</figcaption></figure>
+          <figure class="photo"><span class="ph"><img data-render="tiles:3" width="800" height="600" alt="Lapvágó és felemelt burkolólapok munka közben" loading="lazy" decoding="async"></span><figcaption>Üzlethelyiség · Budapest XI.</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 ============ FALAZÁS (3D) ============ -->
+    <section id="falazas" class="section section--3d" data-scene="wall" data-label="Falazás" aria-labelledby="falazas-title">
+      <div class="wrap split-3d split-3d--media">
+        <div class="copy-3d">
+          <p class="sec-label" data-reveal><span class="sec-num">05</span> / 08 · Falazás</p>
+          <h2 class="display h2" id="falazas-title" data-split>
+            <span class="ln"><span class="ln-i">Falak, amik</span></span>
+            <span class="ln"><span class="ln-i"><em>generációkat</em> bírnak.</span></span>
+          </h2>
+          <p class="body-text" data-reveal>Kerámia falazóblokk, pórusbeton vagy látszótégla: statikai terv szerint, ellenőrzött habarccsal, soronként szintezve.</p>
+        </div>
+
+        <div class="float-block float-block--media" data-repel>
+          <div class="media-grid">
+            <figure class="photo photo--big"><span class="ph"><img data-render="wall:1" width="800" height="600" alt="Félkész téglafal sarokkiképzéssel" loading="lazy" decoding="async"></span><figcaption>Családi ház · Érd</figcaption></figure>
+            <figure class="photo"><span class="ph"><img data-render="wall:2" width="800" height="600" alt="Habarcsos láda és téglaraklap az építkezésen" loading="lazy" decoding="async"></span><figcaption>Társasház · Gödöllő</figcaption></figure>
+            <figure class="photo"><span class="ph"><img data-render="wall:3" width="800" height="600" alt="Kőműveskanál a friss habarcsrétegen" loading="lazy" decoding="async"></span><figcaption>Kerítésfal · Pomáz</figcaption></figure>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 ============ ALAPOZÁS ============ -->
+    <section id="alapozas" class="section section--flat" data-label="Alapozás" aria-labelledby="alapozas-title">
+      <div class="wrap trade-grid trade-grid--flip">
+        <div class="trade-copy">
+          <p class="sec-label" data-reveal><span class="sec-num">06</span> / 08 · Alapozás</p>
+          <h2 class="display h2" id="alapozas-title" data-split>
+            <span class="ln"><span class="ln-i">Minden az</span></span>
+            <span class="ln"><span class="ln-i"><em>alapnál</em> dől el.</span></span>
+          </h2>
+          <p class="body-text" data-reveal>Talajmechanikai szakvélemény alapján tervezünk és kivitelezünk: földmunka, zsaluzás, vasszerelés, betonozás és szigetelés egy ütemtervben.</p>
+          <ul class="chips" data-stagger>
+            <li>Sávalap</li><li>Lemezalap</li><li>Pontalap</li><li>Talajvíz elleni szigetelés</li>
+          </ul>
+        </div>
+
+        <figure class="drawing drawing--found">
+          <svg class="draw-svg" id="svg-found" viewBox="0 0 480 400" role="img" aria-labelledby="svg-found-t">
+            <title id="svg-found-t">Sávalap keresztmetszete: talajrétegek, kavicságy, vasalt alaptest, lábazati fal</title>
+            <g class="g-soil">
+              <path class="draw thin" pathLength="1" d="M0 196c40-8 80 8 120 0s80-8 120 0 80 8 120 0 80-8 120 0"/>
+              <path class="draw thin" pathLength="1" d="M0 262c40 8 80-8 120 0s80 8 120 0 80-8 120 0 80 8 120 0"/>
+              <path class="draw thin" pathLength="1" d="M0 330c40-6 80 6 120 0s80-6 120 0 80 6 120 0 80-6 120 0"/>
+              <text class="svg-label" x="12" y="186">humusz</text>
+              <text class="svg-label" x="12" y="252">agyag</text>
+              <text class="svg-label" x="12" y="320">homokos kavics</text>
+            </g>
+            <g class="g-trench">
+              <line class="draw" pathLength="1" x1="0" y1="130" x2="480" y2="130"/>
+              <path class="draw accent-line" pathLength="1" d="M150 130V310H330V130"/>
+              <g class="gravel">
+                <circle cx="166" cy="302" r="3.5"/><circle cx="182" cy="304" r="3"/><circle cx="198" cy="301" r="3.6"/><circle cx="214" cy="304" r="2.8"/><circle cx="230" cy="302" r="3.4"/><circle cx="246" cy="304" r="3"/><circle cx="262" cy="301" r="3.6"/><circle cx="278" cy="304" r="2.8"/><circle cx="294" cy="302" r="3.4"/><circle cx="310" cy="304" r="3"/>
+              </g>
+            </g>
+            <g class="g-footing">
+              <rect class="draw accent" pathLength="1" x="160" y="236" width="160" height="60"/>
+              <rect class="fill fill--amber" x="160" y="236" width="160" height="60"/>
+              <path class="draw cool thin" pathLength="1" d="M172 248h136M172 284h136"/>
+              <path class="draw cool thin" pathLength="1" d="M220 100v176h40V100z"/>
+              <g class="rebar"><circle cx="176" cy="284" r="3.4"/><circle cx="208" cy="284" r="3.4"/><circle cx="240" cy="284" r="3.4"/><circle cx="272" cy="284" r="3.4"/><circle cx="304" cy="284" r="3.4"/><circle cx="224" cy="104" r="2.6"/><circle cx="256" cy="104" r="2.6"/><circle cx="224" cy="272" r="2.6"/><circle cx="256" cy="272" r="2.6"/></g>
+            </g>
+            <g class="g-stem">
+              <rect class="draw" pathLength="1" x="210" y="90" width="60" height="146"/>
+              <path class="draw dim thin" pathLength="1" d="M206 96v136"/>
+              <path class="draw thin" pathLength="1" d="M200 20h80v70h-80zM200 44h80M200 67h80M240 20v24M220 44v23M260 44v23M240 67v23"/>
+            </g>
+            <g class="g-dims">
+              <path class="draw dim thin" pathLength="1" d="M160 352h160M160 346v12M320 346v12"/>
+              <path class="draw dim thin" pathLength="1" d="M360 130v180M354 130h12M354 310h12"/>
+              <text class="svg-label" x="240" y="372" text-anchor="middle">0,80 m</text>
+              <text class="svg-label" x="372" y="224">1,20 m</text>
+              <text class="svg-label" x="330" y="110">±0,00</text>
+            </g>
+          </svg>
+          <figcaption class="draw-cap">Sávalap · A–A metszet</figcaption>
+        </figure>
+
+        <div class="photo-row photo-row--stagger" data-photos>
+          <figure class="photo"><span class="ph"><img data-render="rebar:1" width="800" height="600" alt="Alapárok szerelt vasalással" loading="lazy" decoding="async"></span><figcaption>Sávalap · Dunakeszi</figcaption></figure>
+          <figure class="photo"><span class="ph"><img data-render="rebar:2" width="800" height="600" alt="Zsaluzat és betonacél kosár közelről" loading="lazy" decoding="async"></span><figcaption>Lemezalap · Budakeszi</figcaption></figure>
+          <figure class="photo"><span class="ph"><img data-render="rebar:3" width="800" height="600" alt="Betonozásra kész alaptest zsaluzattal" loading="lazy" decoding="async"></span><figcaption>Pontalap · Vác</figcaption></figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7 ============ GALÉRIA ============ -->
+    <section id="galeria" class="section section--flat section--gallery" data-label="Galéria" aria-labelledby="galeria-title">
+      <div class="wrap gallery-head">
+        <p class="sec-label" data-reveal><span class="sec-num">07</span> / 08 · Galéria</p>
+        <h2 class="display h2" id="galeria-title" data-split>
+          <span class="ln"><span class="ln-i">Munka <em>közben.</em></span></span>
+        </h2>
+      </div>
+      <div class="gallery-rows"></div>
+    </section>
+
+    <!-- 8 ============ KAPCSOLAT (3D) ============ -->
+    <section id="kapcsolat" class="section section--3d" data-scene="blocks" data-label="Kapcsolat" aria-labelledby="kapcsolat-title">
+      <div class="wrap split-3d split-3d--form">
+        <div class="copy-3d">
+          <p class="sec-label" data-reveal><span class="sec-num">08</span> / 08 · Kapcsolat</p>
+          <h2 class="display h2" id="kapcsolat-title" data-split>
+            <span class="ln"><span class="ln-i">Kérjen</span></span>
+            <span class="ln"><span class="ln-i"><em>ajánlatot.</em></span></span>
+          </h2>
+          <p class="body-text" data-reveal>Írja le röviden a munkát, és két munkanapon belül visszahívjuk egy helyszíni felmérés időpontjával.</p>
+          <ul class="contact-list" data-stagger>
+            <li><span class="cl-k">E-mail</span><a href="mailto:info@example.hu">info@example.hu</a></li>
+            <li><span class="cl-k">Telefon</span><a href="tel:+3600000000">+36 00 000 0000</a></li>
+            <li><span class="cl-k">Iroda</span><span>1117 Budapest, Minta utca 1.</span></li>
+          </ul>
+        </div>
+
+        <div class="float-block float-block--form" data-repel>
+          <form class="quote-form" id="quote-form" action="mailto:info@example.hu" method="post" enctype="text/plain" novalidate>
+            <div class="form-head">
+              <h3 class="form-title">Ajánlatkérés</h3>
+              <p class="form-note">A *-gal jelölt mezők kötelezők.</p>
+            </div>
+            <p class="form-summary" id="form-summary" role="alert" aria-live="assertive"></p>
+            <div class="field">
+              <label for="f-name">Név *</label>
+              <input id="f-name" name="nev" type="text" autocomplete="name" required aria-describedby="f-name-err">
+              <p class="field-err" id="f-name-err"></p>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="f-email">E-mail-cím *</label>
+                <input id="f-email" name="email" type="email" autocomplete="email" inputmode="email" required aria-describedby="f-email-err">
+                <p class="field-err" id="f-email-err"></p>
+              </div>
+              <div class="field">
+                <label for="f-phone">Telefonszám</label>
+                <input id="f-phone" name="telefon" type="tel" autocomplete="tel" inputmode="tel" aria-describedby="f-phone-hint f-phone-err">
+                <p class="field-hint" id="f-phone-hint">Nem kötelező</p>
+                <p class="field-err" id="f-phone-err"></p>
+              </div>
+            </div>
+            <div class="field">
+              <label for="f-msg">Üzenet *</label>
+              <textarea id="f-msg" name="uzenet" rows="4" required aria-describedby="f-msg-err" placeholder="Pl. 40 m² fürdő- és konyhaburkolat, Budaörs, tavaszi kezdéssel."></textarea>
+              <p class="field-err" id="f-msg-err"></p>
+            </div>
+            <button class="btn btn--pill btn--amber btn--lg btn--block" type="submit">
+              Ajánlatkérés küldése
+              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </form>
+
+          <div class="form-success" id="form-success" hidden>
+            <svg class="success-mark" viewBox="0 0 64 64" width="64" height="64" aria-hidden="true">
+              <circle cx="32" cy="32" r="29" fill="none" stroke="currentColor" stroke-width="2.5" pathLength="1"/>
+              <path d="M20 33l8 8 16-17" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" pathLength="1"/>
+            </svg>
+            <h3 class="form-title" tabindex="-1" id="success-title">Köszönjük, megkaptuk!</h3>
+            <p class="body-text">Megnyitottuk a levelezőprogramját a kitöltött üzenettel. Ha nem nyílt meg, írjon közvetlenül: <a href="mailto:info@example.hu" id="success-mailto">info@example.hu</a>.</p>
+            <button class="btn btn--pill btn--ghost" type="button" id="form-reset">Új üzenet</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-inner">
+      <p><img src="assets/logo.svg" width="20" height="20" alt=""> Alapkő Építőipari Kft.</p>
+      <p>info@example.hu · +36 00 000 0000</p>
+      <p>© 2026 · Minden jog fenntartva</p>
+    </div>
+  </footer>
+
+  <!-- Bottom-centre section pill -->
+  <div class="pill" id="section-pill">
+    <ul class="pill-menu" id="pill-menu" hidden>
+      <li><a href="#hero" data-pill="hero"><span>01</span>Kezdőlap</a></li>
+      <li><a href="#rolunk" data-pill="rolunk"><span>02</span>Rólunk</a></li>
+      <li><a href="#munkak" data-pill="munkak"><span>03</span>Előző munkák</a></li>
+      <li><a href="#burkolas" data-pill="burkolas"><span>04</span>Burkolás</a></li>
+      <li><a href="#falazas" data-pill="falazas"><span>05</span>Falazás</a></li>
+      <li><a href="#alapozas" data-pill="alapozas"><span>06</span>Alapozás</a></li>
+      <li><a href="#galeria" data-pill="galeria"><span>07</span>Galéria</a></li>
+      <li><a href="#kapcsolat" data-pill="kapcsolat"><span>08</span>Kapcsolat</a></li>
+    </ul>
+    <button class="pill-btn" type="button" aria-expanded="false" aria-controls="pill-menu" aria-label="Szakaszok: Kezdőlap">
+      <span class="pill-dot" aria-hidden="true"></span>
+      <span class="pill-num" aria-hidden="true">01</span>
+      <span class="pill-name" aria-hidden="true">Kezdőlap</span>
+      <svg class="pill-chev" viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M2.5 7.5 6 4l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

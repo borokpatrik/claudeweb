@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Northbeam Builders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;700;900&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --concrete:#efece6; --paper:#f8f6f2; --ink:#1c1c1a; --muted:#6b6862;
+  --amber:#f2a900; --blueprint:#16324f; --line:#cfe3f7; --grid:rgba(207,227,247,.09);
+  --sans:'Archivo',system-ui,sans-serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+  --ease:cubic-bezier(.2,.8,.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{overflow-x:clip;scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);font:400 16px/1.65 var(--sans)}
+a{color:inherit;text-decoration:none}
+.wrap{width:min(1200px,100% - 32px);margin-inline:auto}
+.mono{font:500 12px/1.4 var(--mono);letter-spacing:.08em;text-transform:uppercase}
+
+/* header */
+header{position:fixed;inset:0 0 auto;z-index:20;background:rgba(248,246,242,.85);backdrop-filter:blur(8px);border-bottom:1px solid rgba(28,28,26,.08)}
+header .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+.logo{display:flex;align-items:center;gap:10px;font:900 18px var(--sans);letter-spacing:-.01em}
+.logo svg{width:26px;height:26px}
+header nav{display:flex;gap:28px;font-size:14px;font-weight:500}
+header nav a{position:relative}
+header nav a::after{content:"";position:absolute;left:0;right:0;bottom:-4px;height:2px;background:var(--amber);transform:scaleX(0);transform-origin:left;transition:transform .35s var(--ease)}
+header nav a:hover::after{transform:none}
+.cta{background:var(--ink);color:var(--paper);padding:10px 18px;font-weight:700;font-size:14px;border-radius:2px;transition:background .25s}
+.cta:hover{background:var(--amber);color:var(--ink)}
+
+/* hero */
+.hero{min-height:100svh;display:grid;align-content:end;padding:120px 0 0;background:var(--concrete);position:relative;overflow:hidden}
+.hero h1{font:900 clamp(48px,11vw,168px)/.88 var(--sans);letter-spacing:-.04em;text-transform:uppercase}
+.hero h1 span{display:block}
+.hero h1 .amber{color:var(--amber);-webkit-text-stroke:0}
+.hero .sub{display:flex;justify-content:space-between;align-items:end;gap:24px;flex-wrap:wrap;margin:36px 0 56px}
+.hero .sub p{max-width:420px;color:var(--muted)}
+.hazard{height:28px;background:repeating-linear-gradient(-45deg,var(--ink) 0 18px,var(--amber) 18px 36px)}
+.ticker{background:var(--ink);color:var(--paper);overflow:hidden;white-space:nowrap;padding:14px 0}
+.ticker div{display:inline-flex;gap:48px;animation:tick 30s linear infinite;padding-right:48px}
+.ticker span::before{content:"■";color:var(--amber);margin-right:16px}
+@keyframes tick{to{transform:translateX(-50%)}}
+
+/* generic section */
+.sec{padding:clamp(80px,12vw,160px) 0}
+.sec h2{font:900 clamp(34px,5vw,64px)/1 var(--sans);letter-spacing:-.03em;margin:12px 0 20px}
+.lede{max-width:560px;color:var(--muted)}
+
+/* services */
+.services{display:grid;grid-template-columns:repeat(3,1fr);border-top:2px solid var(--ink);margin-top:56px}
+.svc{padding:32px 28px 40px 0;border-right:1px solid rgba(28,28,26,.15)}
+.svc+.svc{padding-left:28px}.svc:last-child{border-right:0}
+.svc .mono{color:var(--muted)}
+.svc h3{font:700 24px/1.2 var(--sans);margin:18px 0 10px}
+.svc p{color:var(--muted);font-size:15px}
+
+/* ---------- BUILD: sticky scroll-drawn house ---------- */
+#build{height:420vh;background:var(--blueprint);color:var(--line);position:relative}
+.stage{position:sticky;top:0;height:100svh;display:grid;grid-template-columns:minmax(260px,1fr) 1.6fr;align-items:center;gap:4vw;padding:80px max(16px,calc((100% - 1200px)/2)) 40px;
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:32px 32px}
+.stage h2{color:#fff;font:900 clamp(30px,4vw,52px)/1 var(--sans);letter-spacing:-.03em;margin:10px 0 28px}
+.steps{list-style:none;display:grid;gap:4px}
+.steps li{display:grid;grid-template-columns:44px 1fr;padding:12px 0;border-top:1px solid rgba(207,227,247,.15);opacity:.35;transition:opacity .4s}
+.steps li.on{opacity:1}
+.steps li.on .mono{color:var(--amber)}
+.steps b{display:block;color:#fff;font-weight:700}
+.steps small{font-size:14px;opacity:.8}
+.meter{margin-top:28px;display:flex;align-items:center;gap:14px}
+.meter .bar{flex:1;height:4px;background:rgba(207,227,247,.15)}
+.meter .bar i{display:block;height:100%;width:0;background:var(--amber)}
+.plan{width:100%;max-height:72svh}
+.plan .d{fill:none;stroke:var(--line);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1}
+.plan .d.thin{stroke-width:1.2;stroke:rgba(207,227,247,.6)}
+.plan .d.accent{stroke:var(--amber)}
+.plan .glass{fill:var(--amber);opacity:0;transition:opacity .6s}
+.plan text{font:500 11px var(--mono);fill:rgba(207,227,247,.75);letter-spacing:.08em;opacity:0;transition:opacity .4s}
+.plan.done .glass{opacity:.85}
+.plan.dims text{opacity:1}
+
+/* projects */
+.projects{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;margin-top:56px}
+.proj .ph{aspect-ratio:4/5;background:var(--g);position:relative;overflow:hidden;border-radius:2px}
+.proj .ph::after{content:attr(data-tag);position:absolute;left:14px;top:14px;background:var(--paper);padding:4px 8px;font:500 11px var(--mono);letter-spacing:.08em}
+.proj h3{font:700 20px/1.25 var(--sans);margin:16px 0 4px}
+.proj p{color:var(--muted);font-size:14px}
+
+/* stats */
+.stats{background:var(--ink);color:var(--paper)}
+.stats .wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+.stat b{display:block;font:900 clamp(44px,6vw,80px)/1 var(--sans);letter-spacing:-.04em}
+.stat b sup{font-size:.4em;color:var(--amber)}
+.stat span{color:#a9a69f}
+
+/* contact */
+.contact{background:var(--amber)}
+.contact .wrap{display:flex;justify-content:space-between;align-items:end;gap:32px;flex-wrap:wrap}
+.contact h2{max-width:12ch;margin:0}
+.contact .cta{font-size:16px;padding:16px 26px}
+footer{background:var(--ink);color:#a9a69f;font-size:14px}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;padding:28px 0}
+
+/* reveal */
+.rv{opacity:0;transform:translateY(32px);transition:opacity .9s var(--ease),transform 1s var(--ease);transition-delay:calc(var(--d,0)*100ms)}
+.rv.in{opacity:1;transform:none}
+
+@media (max-width:860px){
+  header nav{display:none}
+  .services,.projects{grid-template-columns:1fr}
+  .svc,.svc+.svc{padding:28px 0;border-right:0;border-bottom:1px solid rgba(28,28,26,.15)}
+  .stats .wrap{grid-template-columns:1fr 1fr}
+  .stage{grid-template-columns:1fr;align-content:center;gap:16px;padding-top:76px}
+  .stage h2{margin-bottom:12px}
+  .steps li{padding:6px 0}.steps small{display:none}
+  .plan{max-height:40svh}
+}
+@media (prefers-reduced-motion:reduce){
+  .rv{opacity:1;transform:none;transition:none}.ticker div{animation:none}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="logo" href="#top"><svg viewBox="0 0 26 26"><path d="M2 24V12L13 3l11 9v12z" fill="#1c1c1a"/><rect x="10" y="15" width="6" height="9" fill="#f2a900"/></svg>Northbeam</a>
+    <nav><a href="#services">Services</a><a href="#build">Process</a><a href="#projects">Projects</a><a href="#contact">Contact</a></nav>
+    <a class="cta" href="#contact">Get a quote</a>
+  </div>
+</header>
+
+<section class="hero" id="top">
+  <div class="wrap">
+    <span class="mono rv">General contractor · Est. 2004</span>
+    <h1 class="rv" style="--d:1"><span>We build</span><span>what <span class="amber" style="display:inline">lasts.</span></span></h1>
+    <div class="sub">
+      <p class="rv" style="--d:2">Homes, extensions and light commercial builds, from the first survey peg to the final key handover. One crew, one schedule, no surprises.</p>
+      <span class="mono rv" style="--d:3">↓ Scroll to see a build</span>
+    </div>
+  </div>
+  <div class="hazard"></div>
+  <div class="ticker"><div>
+    <span>New builds</span><span>Extensions</span><span>Renovation</span><span>Groundworks</span><span>Roofing</span><span>Project management</span>
+    <span>New builds</span><span>Extensions</span><span>Renovation</span><span>Groundworks</span><span>Roofing</span><span>Project management</span>
+  </div></div>
+</section>
+
+<section class="sec" id="services">
+  <div class="wrap">
+    <span class="mono rv">01 — Services</span>
+    <h2 class="rv" style="--d:1">Everything between<br>the plot and the keys.</h2>
+    <p class="lede rv" style="--d:2">We handle planning, structure and finish in-house, so the people who poured your slab are the ones who hang your door.</p>
+    <div class="services">
+      <div class="svc rv" style="--d:1"><span class="mono">A / New build</span><h3>Ground-up homes</h3><p>Detached and semi-detached houses built to your drawings or ours.</p></div>
+      <div class="svc rv" style="--d:2"><span class="mono">B / Extend</span><h3>Extensions &amp; lofts</h3><p>More room without moving: rear, side and roof-space conversions.</p></div>
+      <div class="svc rv" style="--d:3"><span class="mono">C / Restore</span><h3>Renovation</h3><p>Structural repair, re-roofing and full interior refits.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- Scroll-drawn house: section is tall, .stage sticks, scroll progress drives each stroke -->
+<section id="build">
+  <div class="stage">
+    <div>
+      <span class="mono" style="color:var(--amber)">02 — How we build</span>
+      <h2>Watch a house go up.</h2>
+      <ol class="steps">
+        <li data-at="0"><span class="mono">01</span><div><b>Groundwork</b><small>Survey, level and pour the slab.</small></div></li>
+        <li data-at=".22"><span class="mono">02</span><div><b>Framing</b><small>Walls up, square and plumb.</small></div></li>
+        <li data-at=".42"><span class="mono">03</span><div><b>Roof</b><small>Rafters, ridge and chimney.</small></div></li>
+        <li data-at=".62"><span class="mono">04</span><div><b>Openings</b><small>Door and windows fitted.</small></div></li>
+        <li data-at=".84"><span class="mono">05</span><div><b>Handover</b><small>Checked, measured, lights on.</small></div></li>
+      </ol>
+      <div class="meter"><span class="mono" id="pct">000%</span><div class="bar"><i id="bar"></i></div></div>
+    </div>
+
+    <svg class="plan" id="plan" viewBox="0 0 600 440" aria-label="A house being drawn as you scroll">
+      <!-- every .d path uses pathLength=1 so dash maths is always 0..1 -->
+      <!-- groundwork -->
+      <path class="d thin" pathLength="1" data-s="0" data-e=".08" d="M20 380H580"/>
+      <path class="d" pathLength="1" data-s=".06" data-e=".2" d="M110 380V362H490V380"/>
+      <!-- framing -->
+      <path class="d" pathLength="1" data-s=".22" data-e=".32" d="M130 362V210"/>
+      <path class="d" pathLength="1" data-s=".22" data-e=".32" d="M470 362V210"/>
+      <path class="d" pathLength="1" data-s=".3" data-e=".4" d="M130 210H470"/>
+      <!-- roof -->
+      <path class="d" pathLength="1" data-s=".42" data-e=".52" d="M106 222L300 86"/>
+      <path class="d" pathLength="1" data-s=".46" data-e=".56" d="M494 222L300 86"/>
+      <path class="d" pathLength="1" data-s=".54" data-e=".6" d="M392 150V96H426V174"/>
+      <!-- openings -->
+      <path class="d accent" pathLength="1" data-s=".62" data-e=".7" d="M272 362V284H328V362"/>
+      <path class="d" pathLength="1" data-s=".68" data-e=".76" d="M164 240H232V300H164Z"/>
+      <path class="d" pathLength="1" data-s=".72" data-e=".8" d="M368 240H436V300H368Z"/>
+      <path class="d thin" pathLength="1" data-s=".76" data-e=".82" d="M198 240V300M164 270H232M402 240V300M368 270H436"/>
+      <!-- dimensions -->
+      <path class="d thin" pathLength="1" data-s=".84" data-e=".92" d="M130 404H470M130 396V412M470 396V412"/>
+      <path class="d thin" pathLength="1" data-s=".86" data-e=".94" d="M86 362V86M78 362H94M78 86H94"/>
+      <rect class="glass" x="166" y="242" width="64" height="56"/>
+      <rect class="glass" x="370" y="242" width="64" height="56"/>
+      <text x="300" y="428" text-anchor="middle">12.0 M</text>
+      <text x="70" y="226" text-anchor="middle" transform="rotate(-90 70 226)">7.4 M</text>
+    </svg>
+  </div>
+</section>
+
+<section class="sec" id="projects">
+  <div class="wrap">
+    <span class="mono rv">03 — Recent work</span>
+    <h2 class="rv" style="--d:1">Built, signed off, lived in.</h2>
+    <div class="projects">
+      <article class="proj rv" style="--d:1"><div class="ph" data-tag="NEW BUILD" style="--g:linear-gradient(160deg,#d9d3c7,#8d8576)"></div><h3>Three-bed family home</h3><p>Timber frame · 7 months</p></article>
+      <article class="proj rv" style="--d:2"><div class="ph" data-tag="EXTENSION" style="--g:linear-gradient(160deg,#c9d6df,#4a6274)"></div><h3>Two-storey rear extension</h3><p>Masonry · 14 weeks</p></article>
+      <article class="proj rv" style="--d:3"><div class="ph" data-tag="RENOVATION" style="--g:linear-gradient(160deg,#f3dca2,#c08a1e)"></div><h3>Victorian terrace refit</h3><p>Structural + interior · 5 months</p></article>
+    </div>
+  </div>
+</section>
+
+<section class="sec stats">
+  <div class="wrap">
+    <div class="stat rv"><b><span data-count="20">0</span><sup>+</sup></b><span>years on site</span></div>
+    <div class="stat rv" style="--d:1"><b><span data-count="340">0</span></b><span>projects handed over</span></div>
+    <div class="stat rv" style="--d:2"><b><span data-count="48">0</span></b><span>people on the crew</span></div>
+    <div class="stat rv" style="--d:3"><b><span data-count="10">0</span><sup>yr</sup></b><span>structural warranty</span></div>
+  </div>
+</section>
+
+<section class="sec contact" id="contact">
+  <div class="wrap">
+    <h2 class="rv">Got a plot? Let's talk.</h2>
+    <a class="cta rv" style="--d:1" href="mailto:hello@example.com">Book a site visit →</a>
+  </div>
+</section>
+
+<footer><div class="wrap"><strong style="color:var(--paper)">Northbeam Builders</strong><span>Placeholder address · 000 000 0000</span><span>© 2026</span></div></footer>
+
+<script>
+(() => {
+  const clamp = v => Math.min(1, Math.max(0, v));
+
+  // ---- scroll-drawn house
+  const build = document.getElementById('build');
+  const plan = document.getElementById('plan');
+  const strokes = [...plan.querySelectorAll('.d')].map(el => ({ el, s: +el.dataset.s, e: +el.dataset.e }));
+  const steps = [...document.querySelectorAll('.steps li')];
+  const pct = document.getElementById('pct'), bar = document.getElementById('bar');
+
+  function draw() {
+    const r = build.getBoundingClientRect();
+    const p = clamp(-r.top / (r.height - innerHeight)); // 0 when the stage pins, 1 when it unpins
+    for (const { el, s, e } of strokes) el.style.strokeDashoffset = 1 - clamp((p - s) / (e - s));
+    steps.forEach((li, i) => li.classList.toggle('on', p >= +li.dataset.at && (i === steps.length - 1 || p < +steps[i + 1].dataset.at)));
+    plan.classList.toggle('dims', p > .9);
+    plan.classList.toggle('done', p > .96);
+    pct.textContent = String(Math.round(p * 100)).padStart(3, '0') + '%';
+    bar.style.width = p * 100 + '%';
+  }
+  let queued = false;
+  addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(() => { draw(); queued = false; }); } }, { passive: true });
+  addEventListener('resize', draw);
+  draw();
+
+  // ---- reveal on scroll + counters
+  const io = new IntersectionObserver(entries => {
+    for (const e of entries) if (e.isIntersecting) {
+      e.target.classList.add('in');
+      e.target.querySelectorAll('[data-count]').forEach(count);
+      io.unobserve(e.target);
+    }
+  }, { rootMargin: '0px 0px -12% 0px' });
+  document.querySelectorAll('.rv').forEach(el => io.observe(el));
+
+  function count(el) {
+    const end = +el.dataset.count, t0 = performance.now();
+    (function step(t) {
+      const k = clamp((t - t0) / 1400);
+      el.textContent = Math.round(end * (1 - Math.pow(1 - k, 3)));
+      if (k < 1) requestAnimationFrame(step);
+    })(t0);
+  }
+})();
+</script>
+</body>
+</html>

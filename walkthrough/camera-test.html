@@ -1,0 +1,140 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>camera.js tests</title>
+<!-- Route, wall clearance, doorways, hold settling and getMix checks for camera.js at 3 aspects.
+     Serve E:\Coding\ClaudeWeb (python -m http.server) and open /walkthrough/camera-test.html. -->
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js" } }</script>
+<pre id="out">running…</pre>
+<script type="module">
+import * as THREE from 'three';
+import * as mod from './camera.js';
+const run = async () => {
+  const D = THREE.MathUtils.radToDeg;
+
+  const walls = [
+    [-6.1, -5.9, -12.1, 6.1], [5.9, 6.1, -12.1, 6.1], [-6.1, 6.1, -12.1, -11.9],
+    [-6.1, -0.6, 5.9, 6.1], [0.6, 6.1, 5.9, 6.1],
+    [-6.1, -1, -0.1, 0.1], [1, 6.1, -0.1, 0.1],
+    [-6.1, -1, -6.1, -5.9], [1, 6.1, -6.1, -5.9],
+  ];
+  const wallDist = (x, z) => Math.min(...walls.map(([x0, x1, z0, z1]) =>
+    Math.hypot(Math.max(x0 - x, 0, x - x1), Math.max(z0 - z, 0, z - z1))));
+  const BOARD = { outside: new THREE.Vector3(0, 1.45, 6), about: new THREE.Vector3(-5.78, 1.6, 3), process: new THREE.Vector3(-5.78, 1.6, -3),
+    services: new THREE.Vector3(5.78, 1.6, -3), projects: new THREE.Vector3(-2.5, 1.6, -11.78), contact: new THREE.Vector3(2.5, 1.6, -11.78) };
+  const dirFromYP = (y, p) => new THREE.Vector3(-Math.sin(y) * Math.cos(p), Math.sin(p), -Math.cos(y) * Math.cos(p));
+  const camDir = (cam) => { const d = new THREE.Vector3(); cam.getWorldDirection(d); return d; };
+  const holdErr = (cam, id) => D(camDir(cam).angleTo(BOARD[id].clone().sub(cam.position)));
+
+  const results = {};
+  for (const aspect of [16 / 9, 4 / 3, 0.46]) {
+    const cam = new THREE.PerspectiveCamera(55, aspect, 0.05, 100);
+    const rig = mod.createCameraRig(cam);
+    const fails = [];
+    // ---- positions (1000 samples) ----
+    let prev = null, maxStep = 0, minWall = 1e9, maxBob = 0, maxRoll = 0;
+    const crossings = [];
+    const N = 1000;
+    for (let i = 0; i <= N; i++) {
+      const p = i / N;
+      rig.update(p, 1 / 60);
+      const q = cam.position.clone(), d = camDir(cam);
+      if (![q.x, q.y, q.z, d.x, d.y, d.z].every(Number.isFinite)) fails.push(`NaN p=${p}`);
+      if (q.x < -5.5 || q.x > 5.5 || q.z < -11.5 || q.z > 20) fails.push(`bounds p=${p.toFixed(3)}`);
+      maxBob = Math.max(maxBob, Math.abs(q.y - 1.65));
+      maxRoll = Math.max(maxRoll, Math.abs(D(cam.rotation.z)));
+      const wd = wallDist(q.x, q.z); minWall = Math.min(minWall, wd);
+      if (wd < 0.5) fails.push(`wall ${wd.toFixed(2)} p=${p.toFixed(3)}`);
+      if (prev) {
+        const step = q.distanceTo(prev); maxStep = Math.max(maxStep, step);
+        if (step > 0.25) fails.push(`jump ${step.toFixed(3)} p=${p.toFixed(3)}`);
+        for (const zc of [6, 0, -6]) if ((prev.z - zc) * (q.z - zc) <= 0 && prev.z !== q.z) {
+          const x = prev.x + (q.x - prev.x) * (zc - prev.z) / (q.z - prev.z);
+          crossings.push(`z=${zc}:x=${x.toFixed(2)}`);
+          if (Math.abs(x) >= 0.6) fails.push(`doorway z=${zc} x=${x.toFixed(3)}`);
+        }
+      }
+      prev = q;
+    }
+    // ---- target look rate (per 1% window) ----
+    let maxRate = 0, maxRateAt = 0;
+    for (let p = 0; p <= 0.99; p += 0.0005) {
+      const [y0, p0] = rig._debug.targetAt(p), [y1, p1] = rig._debug.targetAt(p + 0.01);
+      const a = D(dirFromYP(y0, p0).angleTo(dirFromYP(y1, p1)));
+      if (a > maxRate) { maxRate = a; maxRateAt = p; }
+    }
+    // 6°/1% was the goal; 360° of turns + 9% holds make ~13.7° the floor (accepted), so guard just above it
+    if (maxRate > 14) fails.push(`look rate ${maxRate.toFixed(2)} deg/1% at p=${maxRateAt.toFixed(3)}`);
+    // ---- spring simulation ----
+    const sim = (pOf, T, dt = 1 / 60) => { let t = 0, maxLag = 0; while (t < T) { t += dt; rig.update(pOf(t), dt); const [ty, tp] = rig._debug.targetAt(pOf(t)); maxLag = Math.max(maxLag, D(camDir(cam).angleTo(dirFromYP(ty, tp)))); } return maxLag; };
+    const stops = rig.stops;
+    const holdCentre = Object.fromEntries(stops.map((s) => [s.id, s.t]));
+    // realistic: walk at 2% progress per second (50 s), sampling at each hold centre
+    const realistic = {};
+    for (const rate of [0.02, 0.04]) {
+      rig.update(0, 0); sim(() => 0, 2);
+      let t = 0, maxLag = 0; const errs = {};
+      const T = 1 / rate;
+      let si = 1;
+      while (t < T + 2) {
+        t += 1 / 60; const p = Math.min(1, t * rate);
+        rig.update(p, 1 / 60);
+        const [ty, tp] = rig._debug.targetAt(p);
+        maxLag = Math.max(maxLag, D(camDir(cam).angleTo(dirFromYP(ty, tp))));
+        if (si < stops.length && p >= stops[si].t) { errs[stops[si].id] = +holdErr(cam, stops[si].id).toFixed(3); si++; }
+      }
+      realistic[`${rate * 100}%/s`] = { maxLagDeg: +maxLag.toFixed(1), holdErrDeg: errs };
+      for (const [id, e] of Object.entries(errs)) if (e > 0.5) fails.push(`realistic ${rate} ${id} err ${e}`);
+    }
+    // fast scrubs: 1 s from A to B, then settle 2.5 s
+    const scrubs = {};
+    const scrub = (a, b, id) => {
+      rig.update(a, 0); sim(() => a, 3);
+      const lag = sim((t) => a + (b - a) * Math.min(1, t), 1);
+      sim(() => b, 2.5);
+      const e = holdErr(cam, id);
+      scrubs[`${a.toFixed(2)}->${id}`] = { err: +e.toFixed(4), lagDuringScrub: +lag.toFixed(1) };
+      if (e > 0.5) fails.push(`scrub ${a}->${id} err ${e.toFixed(2)}`);
+    };
+    scrub(0, 1, 'contact');
+    scrub(1, 0, 'outside');
+    for (const s of stops) { scrub(0, s.t, s.id); scrub(1, s.t, s.id); }
+    // pure function check
+    rig.update(0.62, 0.016); const pa = cam.position.clone();
+    rig.update(0.1, 0.016); rig.update(0.62, 0.5); if (pa.distanceTo(cam.position) > 1e-9) fails.push('not scrub-pure');
+    // velocity
+    rig.update(0.2, 0); sim(() => 0.2, 2); const vHold = rig.getVelocity();
+    let vMax = 0; rig.update(0, 0); { let t = 0; while (t < 50) { t += 1 / 60; rig.update(t / 50, 1 / 60); vMax = Math.max(vMax, rig.getVelocity()); } }
+    // ---- getMix ----
+    const keys = ['exterior', 'hall', 'living', 'studio', 'about', 'process', 'services', 'projects', 'contact'];
+    let mixJump = 0, mixRange = true;
+    let last = null;
+    for (let i = 0; i <= 10000; i++) {
+      const m = { ...rig.getMix(i / 10000) };
+      for (const k of keys) { if (!(m[k] >= 0 && m[k] <= 1)) mixRange = false; if (last) mixJump = Math.max(mixJump, Math.abs(m[k] - last[k])); }
+      last = m;
+    }
+    if (!mixRange) fails.push('mix out of range');
+    // steepest smoothstep slope is ~0.0116 per 1e-4 progress; a real discontinuity is far larger
+    if (mixJump > 0.02) fails.push(`mix jump ${mixJump}`);
+    if (rig.getMix(0).exterior !== 0) fails.push('exterior(0) != 0');
+    const endMix = rig.getMix(rig.stops.at(-1).t);
+    if (endMix.studio !== 1 || endMix.contact !== 1) fails.push('end mix');
+    const mixAtStops = Object.fromEntries(stops.map((s) => { const m = rig.getMix(s.t); return [s.id, keys.filter((k) => m[k] > 0.001).map((k) => `${k}=${m[k].toFixed(2)}`).join(' ')]; }));
+
+    results[aspect.toFixed(2)] = {
+      pass: fails.length === 0, nFails: fails.length, fails: fails.slice(0, 12),
+      maxStep: +maxStep.toFixed(3), minWall: +minWall.toFixed(3), maxBob: +maxBob.toFixed(4), maxRollDeg: +maxRoll.toFixed(3),
+      crossings, targetLookMaxDegPer1pct: +maxRate.toFixed(2), at: +maxRateAt.toFixed(3), rateCapUsed: +rig._debug.rateCap.toFixed(2),
+      realistic, scrubs, vHold: +vHold.toFixed(4), vMax: +vMax.toFixed(2), mixJump: +mixJump.toFixed(4), mixAtStops,
+      stops: stops.map((s) => [s.id, +s.t.toFixed(4)]),
+      segments: rig._debug.segments.map((s) => `${s.type === 'hold' ? s.id : s.from + '>' + s.to} ${s.t0.toFixed(4)}-${s.t1.toFixed(4)}`),
+      netTurnDeg: rig._debug.netTurnDeg.map((x) => +x.toFixed(0)),
+    };
+  }
+  return results;
+};
+const results = await run();
+const ok = Object.values(results).every((r) => r.pass);
+document.title = ok ? 'PASS' : 'FAIL';
+document.getElementById('out').textContent = (ok ? 'PASS' : 'FAIL') + '\n\n' + JSON.stringify(results, null, 2);
+</script>
