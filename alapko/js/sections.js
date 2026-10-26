@@ -28,7 +28,6 @@ export function initSections() {
   else initMotion();
 
   initRefresh();
-  initModalPause();
 }
 
 /* =========================================================
@@ -57,12 +56,6 @@ function initRefresh() {
   onReady('velemenyek', 'reviews:ready', scheduleRefresh);
 }
 
-/* Decorative loops stop while a modal is open (D6 events). */
-function initModalPause() {
-  const set = (state) => qsa('.ticker-track').forEach((t) => { t.style.animationPlayState = state; });
-  document.addEventListener('modal:open', () => set('paused'));
-  document.addEventListener('modal:close', () => set(''));
-}
 
 /* =========================================================
    Header
@@ -461,12 +454,32 @@ function parallax() {
 }
 
 function ticker() {
-  const t = qs('.ticker');
-  if (!t) return;
-  // Scroll nudges the band sideways on top of its constant CSS drift.
-  gsap.fromTo(t, { x: 0 }, {
-    x: -120, ease: 'none',
-    scrollTrigger: { trigger: '#rolunk', start: 'top bottom', end: 'bottom top', scrub: 0.5 },
+  const band = qs('.ticker'), track = qs('.ticker-track');
+  if (!band || !track) return;
+  // One set of words, each wrapping on its own: out past the left edge, straight back in from the right.
+  // (Reduced motion never calls this, so the words stay a plain static row there.)
+  const words = [...track.children];
+  const GAP = 28; // same as the span's inner gap in style.css, so diamond-to-word spacing matches
+  let widths = [], starts = [], loop = 1, offset = 0;
+  const layout = () => {
+    widths = words.map((w) => w.offsetWidth);
+    starts = widths.map((_, i) => widths.slice(0, i).reduce((a, w) => a + w + GAP, 0));
+    track.style.height = `${words[0].offsetHeight}px`;
+    // words sit a constant GAP apart; a word only re-enters once it's fully off the right edge
+    loop = Math.max(band.clientWidth + Math.max(...widths), widths.reduce((a, w) => a + w + GAP, 0));
+  };
+  layout();
+  track.style.position = 'relative';
+  words.forEach((w) => { Object.assign(w.style, { position: 'absolute', left: '0', top: '0' }); });
+  addEventListener('resize', layout);
+  const nudge = { x: 0 }; // scroll pushes the band along on top of its constant drift
+  gsap.to(nudge, { x: 120, ease: 'none', scrollTrigger: { trigger: '#rolunk', start: 'top bottom', end: 'bottom top', scrub: 0.5 } });
+  gsap.ticker.add((time, dt) => {
+    if (!document.documentElement.classList.contains('modal-open')) offset += (dt / 1000) * 24; // ~24 px/s
+    words.forEach((w, i) => {
+      const x = ((((starts[i] - offset - nudge.x + widths[i]) % loop) + loop) % loop) - widths[i];
+      w.style.transform = `translate3d(${x}px, 0, 0)`;
+    });
   });
 }
 

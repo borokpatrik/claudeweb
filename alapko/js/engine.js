@@ -23,10 +23,11 @@ const TAN = Math.tan((FOV * DEG) / 2);
 const CAM_DIST = 3.2;                 // camera orbit radius; the object sits near the pivot
 const D_NEAR = 0.5 * CAM_DIST;        // far-layer depth 1 (white) -> this distance from the camera
 const D_FAR = 2.4 * CAM_DIST;         // far-layer depth 0 (sky)
-const MARGIN_Y = 0.28;                // landscape overscan (fraction of half height), for parallax + scroll roll
+const MARGIN_Y = 0.5;               // landscape overscan (fraction of half height), for parallax + scroll roll
 const SKY_D = 0.035;                  // depth below this is sky (DAv2 maps: sky is ~0, far hills 0.05+)
 const SKY_KEEP = 0;                   // sky pixels dropped: the flat gradient behind the canvas is the sky
 const ROLL_MAX = 30 * DEG;            // section tilt when it is a full viewport away from centre
+const ROLL_EXIT = 8 * DEG;            // smaller tilt on the way out (top away from the viewer)
 const BAKE_YAWS = [0, 55 * DEG, -55 * DEG];
 const MORPH_DUR = 1.3;
 const DISPERSE_DUR = 0.9;
@@ -85,6 +86,9 @@ uniform vec4 uRect0;      // repel rects: centre xy, half size zw (CSS px); z <=
 uniform vec4 uRect1;
 uniform float uRepel;     // max push in CSS px
 uniform vec4 uMouse;      // cursor xy (CSS px), push in CSS px, radius in CSS px
+uniform float uOccA;      // place.solid occluders: object points are indices [0, n) of the morph source...
+uniform float uOccB;      // ...and of the morph target
+uniform float uOccSize;   // depth-splat size multiplier (OCC_PASS only)
 attribute vec3 aPosB;
 attribute vec4 aColA;
 attribute vec4 aColB;
@@ -140,6 +144,20 @@ void main() {
   vec2 md = dm / max(dl, 1.0);
   push += (md + vec2(-md.y, md.x) * 0.3) * fm * uMouse.z * (0.6 + 0.8 * fract(seed * 5.13));
   clip.xy += push * vec2(2.0 / uViewport.x, -2.0 / uViewport.y) * clip.w;
+
+#ifdef OCC_PASS
+  // depth-only splat of a solid object's points, a touch deeper than the points themselves: land dots behind
+  // the object fail the depth test every frame, so nothing shows through and no baked hole ever slides into view
+  float lim = mix(uOccA, uOccB, uFade > 0.5 ? step(0.5, uMorph) : step(0.5, e));
+  if (float(gl_VertexID) >= lim || c.a < 0.003) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); gl_PointSize = 0.0; return; }
+  vec4 mvb = mv;
+  mvb.z -= 0.06;
+  vec4 cb = projectionMatrix * mvb;
+  clip.z = cb.z / cb.w * clip.w;
+  gl_PointSize = max(uPx * uOccSize, 1.0);
+  gl_Position = clip;
+  return;
+#endif
 
   vCol = vec4(c.rgb * sh * (1.0 + 0.25 * fm * min(uMouse.z / 30.0, 1.0)), c.a * (1.0 - 0.3 * inside));
   // varied dot sizes give the painterly, scattered look (no grid)
@@ -262,6 +280,8 @@ export function createEngine(canvas, SCENES) {
     uRect1: { value: new THREE.Vector4() },
     uRepel: { value: REPEL_PX },
     uMouse: { value: new THREE.Vector4(0, 0, 0, MOUSE_R) },
+    uOccA: { value: 0 },
+    uOccB: { value: 0 },
   };
   const mainMat = new THREE.ShaderMaterial({
     uniforms: { ...U, uSizeMul: { value: 1 } },
@@ -275,6 +295,19 @@ export function createEngine(canvas, SCENES) {
   points.frustumCulled = false;
   points.renderOrder = 1;
   spin.add(points);
+  // opaque, colour-less, drawn before the transparent dots: writes only the solid object's depth splats
+  const occPoints = new THREE.Points(geo, new THREE.ShaderMaterial({
+    uniforms: { ...U, uSizeMul: { value: 1 }, uOccSize: { value: 1.7 } },
+    defines: { OCC_PASS: '' },
+    vertexShader: POINT_VERT,
+    fragmentShader: 'void main() { vec2 c = gl_PointCoord * 2.0 - 1.0; if (dot(c, c) > 1.0) discard; gl_FragColor = vec4(0.0); }',
+    colorWrite: false,
+    depthWrite: true,
+    depthTest: true,
+  }));
+  occPoints.frustumCulled = false;
+  occPoints.renderOrder = 0;
+  spin.add(occPoints);
 
   if (T.glow) {
     const glowMat = new THREE.ShaderMaterial({
@@ -613,17 +646,20 @@ export function createEngine(canvas, SCENES) {
     // placement (D2): normalized anchor at 16:9; portrait centres and shrinks the object
     const pl = def.place || { x: 0.5, base: 0.8, h: 0.5 };
     const portrait = asp < 1;
-    // optional per-scene portrait override { x, base, h }, given as final screen fractions
-    const pp = portrait ? pl.portrait : null;
-    const ax = portrait ? (pp ? pp.x : 0.5) : pl.x;
+    // optional per-scene overrides { x, base, h, w? } (place.portrait / place.desktop), final screen fractions;
+    // w caps the width (default 0.92); above 1 the object runs off the frame edges
+    const pp = portrait ? pl.portrait : pl.desktop;
+    const ax = pp ? pp.x : portrait ? 0.5 : pl.x;
     // foreground: the object stands low in the frame on the near ground, which overlaps its base
-    const hFrac = portrait ? (pp ? pp.h : Math.min(0.3, pl.h * 0.8)) : Math.min(0.7, pl.h * 1.2);
-    const base = portrait ? (pp ? pp.base : 0.7) : Math.min(0.94, pl.base + 0.1);
+    const hFrac = pp ? pp.h : portrait ? Math.min(0.3, pl.h * 0.8) : Math.min(0.7, pl.h * 1.2);
+    const base = pp ? pp.base : portrait ? 0.7 : Math.min(0.94, pl.base + 0.1);
+    let objH = hFrac; // actual on-screen height fraction, set once the object is fitted
     const axh = (2 * ax - 1) * asp, byh = 1 - 2 * base;
     let Dobj = CAM_DIST;
     if (far) {
       // depth of the landscape ground under the anchor
-      const u = (axh / (far.ai * far.h0) + 1) / 2, v = (1 - byh / far.h0) / 2;
+      const u = (((2 * clamp(ax, 0.05, 0.95) - 1) * asp) / (far.ai * far.h0) + 1) / 2, // an anchor off-frame (w > 1) samples the visible ground
+        v = (1 - byh / far.h0) / 2;
       const cx = Math.round(u * far.gw), cy = Math.round(v * far.gh);
       let s = 0, c = 0;
       for (let y = cy - 3; y <= cy + 3; y++) for (let x = cx - 3; x <= cx + 3; x++) {
@@ -637,7 +673,9 @@ export function createEngine(canvas, SCENES) {
       Dobj *= pl.push || 1;
     }
 
-    const nObj = Math.min(obj.n, far ? T.obj : OBJ_ONLY);
+    // a solid object without a near layer takes the near budget (denser dots); otherwise the far layer does
+    const spare = far && !near ? T.near : 0, objSpare = pl.solid ? spare : 0;
+    const nObj = Math.min(obj.n, far ? T.obj + objSpare : OBJ_ONLY);
     const total = nObj + (far ? T.far + T.near : 0);
     const pos = new Float32Array(total * 3), col = new Uint8Array(total * 4), del = new Uint8Array(total);
     let n = 0;
@@ -650,19 +688,29 @@ export function createEngine(canvas, SCENES) {
     {
       const b = obj.box;
       // back at the ground depth; size and anchor are taken at the object's middle depth
-      const fitAt = (D) => Math.min((hFrac * 2 * TAN * D) / Math.max(1e-3, b.y1 - b.y0), (0.92 * 2 * TAN * asp * D) / Math.max(1e-3, b.x1 - b.x0));
+      const fitAt = (D) => Math.min((hFrac * 2 * TAN * D) / Math.max(1e-3, b.y1 - b.y0), (((pp && pp.w) || 0.92) * 2 * TAN * asp * D) / Math.max(1e-3, b.x1 - b.x0));
       let sc = fitAt(Dobj);
       const Dc = Math.max(0.35 * CAM_DIST, Dobj - 0.5 * (b.z1 - b.z0) * sc);
       sc = fitAt(Dc);
+      objH = ((b.y1 - b.y0) * sc) / (2 * TAN * Dc);
       const X = axh * TAN * Dc, Yb = byh * TAN * Dc, Z = CAM_DIST - Dobj;
       // the object's back sits at the ground depth under the anchor, so it is never behind the land
       const xm = (b.x0 + b.x1) / 2, zm = b.z0;
       const fa = far ? 0.08 + fogAt(Dobj) * 0.7 : 0;
       const jit = (2 / BAKE_H) * sc; // one bake cell: breaks up the render's pixel lattice
+      // `base` anchors the object's lowest local y, but perspective puts its near corner lower on screen
+      // (past the bottom edge at low bases); lift it so its true lowest screen point sits on `base`
+      let maxYs = -Infinity;
+      for (let k = 0; k < nObj; k++) {
+        const y = (obj.pos[k * 3 + 1] - b.y0) * sc + Yb, z = (obj.pos[k * 3 + 2] - zm) * sc + Z;
+        const ys = 0.5 - y / (2 * TAN * Math.max(0.1, CAM_DIST - z));
+        if (ys > maxYs) maxYs = ys;
+      }
+      const lift = Math.max(0, maxYs - base) * 2 * TAN * Dc;
       for (let k = 0; k < nObj; k++) {
         if ((k & 4095) === 0) await checkpoint();
         const x = (obj.pos[k * 3] - xm) * sc + X + (rnd() - 0.5) * jit;
-        const y = (obj.pos[k * 3 + 1] - b.y0) * sc + Yb + (rnd() - 0.5) * jit;
+        const y = (obj.pos[k * 3 + 1] - b.y0) * sc + Yb + lift + (rnd() - 0.5) * jit;
         const z = (obj.pos[k * 3 + 2] - zm) * sc + Z;
         pos[n * 3] = x; pos[n * 3 + 1] = y; pos[n * 3 + 2] = z;
         for (let c = 0; c < 3; c++) col[n * 4 + c] = obj.col[k * 4 + c] * (1 - fa) + fog[c] * 255 * fa;
@@ -742,16 +790,19 @@ export function createEngine(canvas, SCENES) {
         }
       }
     }
-    const nearTop = base - 0.06; // grass overlaps the object's base, so it stands in the land instead of floating
+    // grass overlaps the object's base so it stands in the land; scaled to the object's real height, since wide
+    // objects shrink on narrow screens and a fixed 6% overlap then buries them
+    const nearTop = base - Math.min(0.06, 0.15 * objH);
     let nFar = 0, nNear = 0;
-    if (far) { const s = n; await sheet(far, false, T.far + (near ? 0 : T.near)); nFar = n - s; }
+    if (far) { const s = n; await sheet(far, false, T.far + spare - objSpare); nFar = n - s; }
     if (near) { const s = n; await sheet(near, true, T.near); nNear = n - s; }
 
     stats.clouds[id] = { obj: nObj, far: nFar, near: nNear, total: n, farId: far && far.id, nearId: near && near.id, sunSide: lit ? +lit.env.sunSide.toFixed(2) : null, ms: Math.round(performance.now() - t0) };
     // flat dark gradient in the landscape's own sky tone stands in for the sky
     const tone = (k) => fog.map((c) => Math.round(c * 255 * k)).join(',');
     const bg = `linear-gradient(180deg, rgb(${tone(0.36)}) 0%, rgb(${tone(0.16)}) 55%, rgb(${tone(0.07)}) 100%)`;
-    return { id, n, pos, col, del, bg };
+    // object points come first in the cloud, so the depth-splat pass can find them by index
+    return { id, n, pos, col, del, bg, occN: pl.solid ? nObj : 0 };
   }
 
   /* ---------- bake queue ---------- */
@@ -837,6 +888,8 @@ export function createEngine(canvas, SCENES) {
     const A = aPosA.array, B = aPosB.array, CA = aColA.array, CB = aColB.array, R = aRnd.array, D = aDelay.array;
     snapshot();
     const n0 = count;
+    // occluder ranges follow the morph: whatever was showing becomes the source
+    U.uOccA.value = n0 === 0 ? 0 : morph >= 0.5 ? U.uOccB.value : U.uOccA.value;
     U.uFade.value = reduced ? 1 : 0;
     U.uStagger.value = reduced ? 0 : STAGGER;
 
@@ -872,6 +925,7 @@ export function createEngine(canvas, SCENES) {
       morphDur = reduced ? 0.45 : MORPH_DUR;
       U.uArc.value = n0 === 0 ? 0 : 0.22;
       shown = cloud.id;
+      U.uOccB.value = cloud.occN || 0;
       if (cloud.bg) canvas.style.background = cloud.bg;
     } else {
       if (n0 === 0) { shown = null; return; }
@@ -882,6 +936,7 @@ export function createEngine(canvas, SCENES) {
         D[i] = Math.random() * 255;
       }
       finalCount = 0;
+      U.uOccB.value = 0;
       morphDur = reduced ? 0.35 : DISPERSE_DUR;
       U.uArc.value = 0;
       shown = null;
@@ -951,7 +1006,7 @@ export function createEngine(canvas, SCENES) {
     // rotation limits so the overscanned landscape edges stay off screen (sky at ~0.58 lever)
     const asp = camera.aspect;
     yawMax = clamp((marginX(asp) * TAN * asp) / 0.58, 0.03, 0.2);
-    pitchMax = (MARGIN_Y * TAN) / 0.58;
+    pitchMax = (0.28 * TAN) / 0.58;   // fixed: a bigger ground overscan must not widen the cursor orbit
     // landscapes are composed for one aspect; re-compose when it changes for real (debounced)
     if (Math.abs(Math.log(asp / bakeAspect)) > 0.18) {
       clearTimeout(aspectTimer);
@@ -998,7 +1053,9 @@ export function createEngine(canvas, SCENES) {
     let rollT = 0;
     if (active && !reduced) {
       const r = active.getBoundingClientRect();
-      rollT = clamp((r.top + r.height / 2 - cssH / 2) / cssH, -1, 1) * ROLL_MAX;
+      const rel = clamp((r.top + r.height / 2 - cssH / 2) / cssH, -1, 1);
+      // receding past ~10° shows the ground's underside, so the exit tilt stays small
+      rollT = rel * (rel > 0 ? ROLL_MAX : ROLL_EXIT);
     }
     roll += (rollT - roll) * (1 - Math.exp(-dt * 8));
     spin.rotation.x = roll;
@@ -1019,8 +1076,9 @@ export function createEngine(canvas, SCENES) {
     const k = 1 - Math.exp(-dt * 3);
     cmx += (mx - cmx) * k;
     cmy += (my - cmy) * k;
-    const yaw = cmx * yawMax * 0.55 * (reduced ? 0.5 : 1);
-    const pit = cmy * pitchMax * 0.85 * (reduced ? 0.5 : 1);
+    // cursor orbit kept at 15% of its old reach (user asked for -85%)
+    const yaw = cmx * yawMax * 0.55 * 0.15 * (reduced ? 0.5 : 1);
+    const pit = cmy * pitchMax * 0.85 * 0.15 * (reduced ? 0.5 : 1);
     camera.position.set(CAM_DIST * Math.sin(yaw) * Math.cos(pit), CAM_DIST * Math.sin(pit), CAM_DIST * Math.cos(yaw) * Math.cos(pit));
     camera.lookAt(0, 0, 0);
 

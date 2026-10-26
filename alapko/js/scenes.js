@@ -392,102 +392,57 @@ function buildCrane(v = 0, env = null) {
 }
 
 /* ==================================================================== WALL */
+// A brick wall mid-build, drawn for a soft dot cloud: one long running-bond wall, its left corner
+// (with a short return) raised to full height first, the rest racked back in steps towards the
+// right where the next courses go, a brick pack waiting at the open end, all on a grey footing in
+// a dark strip of dug soil. Chunky bricks and wide, light mortar so the courses still read at low
+// dot density; the stepped rack + corner lead give the silhouette. No small props (they become noise).
 function buildWall(v = 0, env = null) {
-  const bare = !!(env && env.bare);
-  const k = new Kit([0.3, 0.55, 0.3], 0.35);
-  const white = k.m('#ffffff', { r: 0.85 });
-  const mortar = k.m('#bdb6a8', { r: 1 });
-  const footing = k.m('#9a9890', { r: 0.95 });
-  const ground = k.m('#6f6252', { r: 1 });
+  const k = new Kit([0.2, 0.62, 0.55], 0.3);
+  const white = k.m('#ffffff', { r: 0.9 });
+  const mortar = k.m('#e8dfcf', { r: 1 });
+  const footing = k.m('#a6a49d', { r: 0.95 });
+  const soil = k.m('#5a4634', { r: 1 });
   const pallet = k.m('#c49a5c', { r: 0.85 });
-  const palletDk = k.m('#9a7444', { r: 0.85 });
-  const tub = k.m('#26282c', { r: 0.6 });
-  const steel = k.m('#c7cfd8', { r: 0.3, m: 0.6 });
-  const handle = k.m('#a8622e', { r: 0.6 });
-  const amber = k.m('#f2a900', { r: 0.5 });
-  const R = rng(7);
-  const brickCol = () => new THREE.Color().setHSL(0.03 + R() * 0.025, 0.55 + R() * 0.15, 0.4 + R() * 0.09);
+  const R = rng(11);
+  const brickCol = () => new THREE.Color().setHSL(0.024 + R() * 0.022, 0.66 + R() * 0.14, 0.43 + R() * 0.09);
 
-  if (!bare) k.box(ground, 4.3, 0.06, 2.3, 0.3, -0.03, 0.35);
-  k.box(footing, 3.1, 0.12, 0.42, -0.25, 0.06, 0);
+  const BW = 0.28, BH = 0.08, BD = 0.14, J = 0.03, PX = BW + J, PY = BH + J;
+  const FY = 0.14, C = 10, N = 14, M = 4, x0 = -2.4;
+  // soil strip + footing: kept in bare mode too, it is what plants the wall on any landscape
+  k.box(soil, N * PX + 1.9, 0.04, 0.55, x0 + (N * PX) / 2 + 0.55, 0.02, 0.12);
+  k.box(soil, 0.55, 0.04, M * PX + 0.2, x0 + BD / 2, 0.02, BD / 2 + (M * PX) / 2);
+  k.box(footing, N * PX + 0.2, FY - 0.04, BD + 0.18, x0 + (N * PX) / 2, 0.04 + (FY - 0.04) / 2, 0);
+  k.box(footing, BD + 0.18, FY - 0.04, M * PX + 0.1, x0 + BD / 2, 0.04 + (FY - 0.04) / 2, BD / 2 + (M * PX) / 2);
 
-  // wall in running bond, racked back at the right end
-  const bw = 0.25, bh = 0.065, bd = 0.12, px = 0.26, py = 0.077;
-  const x0 = -1.65, courses = 16, full = 11;
   const bricks = [];
-  for (let c = 0; c < courses; c++) {
-    const off = (c % 2) * px * 0.5;
-    const n = Math.round((full * px - 0.5 * px * Math.max(0, c - 5) - off) / px);
-    const y = 0.12 + py * c + bh / 2 + 0.006;
-    let xEnd = x0;
-    for (let i = 0; i < n; i++) {
-      const x = x0 + off + i * px + bw / 2;
-      bricks.push({ p: [x, y, 0], s: [bw, bh, bd], c: brickCol() });
-      xEnd = x + bw / 2;
-    }
-    if (off) bricks.push({ p: [x0 + off / 2 - 0.003, y, 0], s: [off - 0.012, bh, bd], c: brickCol() });
-    k.box(mortar, xEnd - x0, py, bd - 0.016, (x0 + xEnd) / 2, 0.12 + py * c + py / 2, 0);
+  for (let c = 0; c < C; c++) {
+    const odd = c % 2 === 1;
+    const y = FY + J + c * PY + BH / 2, ym = FY + c * PY + PY / 2;
+    // main wall along x; corner bond: odd courses start past the return's brick
+    const xs = odd ? x0 + BD + J : x0;
+    const xEnd = x0 + N * PX - J - Math.floor(c / 3) * 3 * PX; // racked back in big steps (3 courses x 3 bricks) that survive the dots
+    const n = Math.floor((xEnd - xs + J) / PX);
+    for (let i = 0; i < n; i++) bricks.push({ p: [xs + i * PX + BW / 2, y, 0], s: [BW, BH, BD], c: brickCol() });
+    const xe = xs + n * PX - J;
+    k.box(mortar, xe - x0, PY, BD - 0.03, (x0 + xe) / 2, ym, 0);
+    // corner lead: the return runs towards the viewer, full height
+    const zs = odd ? -BD / 2 : BD / 2 + J;
+    const m = odd ? M + 1 : M;
+    for (let i = 0; i < m; i++) bricks.push({ p: [x0 + BD / 2, y, zs + i * PX + BW / 2], s: [BD, BH, BW], c: brickCol() });
+    const ze = zs + m * PX - J;
+    k.box(mortar, BD - 0.03, PY, ze - BD / 2, x0 + BD / 2, ym, (BD / 2 + ze) / 2);
   }
+
+  // brick pack on a pallet at the open (racked) end
+  const P = [x0 + N * PX + 0.75, 0, 0.55];
+  k.box(pallet, 0.95, 0.12, 0.8, P[0], 0.1, P[2]);
+  for (let L = 0; L < 6; L++) for (let i = 0; i < 3; i++) for (let j = 0; j < 5; j++) {
+    bricks.push({ p: [P[0] - PX + i * PX, 0.16 + J / 2 + L * PY + BH / 2, P[2] - 2 * (BD + 0.02) + j * (BD + 0.02)], s: [BW, BH, BD], c: brickCol() });
+  }
+  k.box(k.m('#3a2a20', { r: 1 }), 3 * PX - 0.04, 6 * PY - 0.04, 5 * (BD + 0.02) - 0.04, P[0], 0.16 + 3 * PY, P[2]);
   k.inst(boxGeo(), white, bricks);
-
-  // trowel resting on top of the wall
-  const blade = geo('trowel', () => {
-    const s = new THREE.Shape();
-    s.moveTo(0, -0.07); s.lineTo(0.2, -0.045); s.quadraticCurveTo(0.29, 0, 0.2, 0.045); s.lineTo(0, 0.07);
-    s.quadraticCurveTo(-0.02, 0, 0, -0.07);
-    const g = new THREE.ExtrudeGeometry(s, { depth: 0.008, bevelEnabled: false, curveSegments: 4 });
-    g.rotateX(-Math.PI / 2);
-    return g;
-  });
-  const tr = new THREE.Group();
-  const topY = 0.12 + py * courses + 0.006;
-  tr.position.set(-0.75, topY + 0.004, 0.02);
-  tr.rotation.y = 0.5;
-  tr.scale.setScalar(1.5);
-  k.mesh(blade, steel, -0.1, 0, 0, tr);
-  k.box(steel, 0.015, 0.06, 0.015, -0.08, 0.03, 0, 0, tr);
-  const h = k.cyl(handle, 0.022, 0.16, -0.17, 0.065, 0, 8, tr);
-  h.rotation.z = Math.PI / 2 - 0.15;
-  k.root.add(tr);
-  // mortar on the course being laid
-  k.box(mortar, 0.7, 0.025, 0.1, -1.15, topY + 0.006, 0);
-
-  // mortar tub
-  const tubG = geo('tub', () => new THREE.CylinderGeometry(0.34, 0.27, 0.3, 18, 1, true));
-  k.mesh(tubG, k.m('#26282c', { r: 0.6, side: 1 }), -0.75, 0.15, 0.85);
-  k.cyl(tub, 0.27, 0.02, -0.75, 0.01, 0.85, 18);
-  const lip = k.mesh(geo('tubLip', () => new THREE.TorusGeometry(0.34, 0.022, 4, 18)), tub, -0.75, 0.3, 0.85);
-  lip.rotation.x = Math.PI / 2;
-  const mortarTop = k.mesh(geo('mortarTop', () => new THREE.SphereGeometry(0.32, 14, 6, 0, Math.PI * 2, 0, Math.PI / 2)), mortar, -0.75, 0.22, 0.85);
-  mortarTop.scale.set(1, 0.22, 1);
-
-  // pallet of bricks
-  const P = [1.85, 0, 0.45];
-  const slats = [];
-  for (let i = 0; i < 7; i++) slats.push({ p: [P[0] - 0.48 + i * 0.16, 0.13, P[2]], s: [0.1, 0.022, 1.0] });
-  for (const z of [-0.45, 0, 0.45]) slats.push({ p: [P[0], 0.07, P[2] + z], s: [1.0, 0.1, 0.1] });
-  for (let i = 0; i < 3; i++) slats.push({ p: [P[0], 0.012, P[2] - 0.4 + i * 0.4], s: [1.0, 0.022, 0.1] });
-  k.inst(boxGeo(), pallet, slats.slice(0, 7));
-  k.inst(boxGeo(), palletDk, slats.slice(7));
-  const stack = [];
-  for (let L = 0; L < 8; L++) {
-    const y = 0.141 + L * 0.068 + 0.033;
-    for (let i = 0; i < 4; i++) for (let j = 0; j < 7; j++) {
-      if (L === 7 && i + j * 0.6 > 3.2) continue;
-      if (L === 6 && i === 3 && j > 4) continue;
-      stack.push({ p: [P[0] - 0.375 + i * 0.25, y, P[2] - 0.42 + j * 0.14], s: [0.245, 0.065, 0.12], c: brickCol() });
-    }
-  }
-  k.inst(boxGeo(), white, stack);
-  // spirit level leaning against the wall
-  const lvl = k.box(amber, 0.9, 0.06, 0.03, 0.35, 0.42, 0.11);
-  lvl.rotation.z = 1.15;
-  // a few loose bricks
-  k.inst(boxGeo(), white, [
-    { p: [0.9, 0.035, 0.6], s: [0.245, 0.065, 0.12], r: [0, 0.4, 0], c: brickCol() },
-    { p: [1.05, 0.035, 0.88], s: [0.245, 0.065, 0.12], r: [0, -0.3, 0], c: brickCol() },
-  ]);
-  return finish(k, v, 2.2, { yaw: 30, elev: 18, fov: 38, fill: 1.2 }, env);
+  return finish(k, v, 3.2, { yaw: 6, elev: 10, fov: 38, fill: 1.84 }, env);
 }
 
 /* ================================================================== BLOCKS */
@@ -698,7 +653,7 @@ function buildRebar(v = 0, env = null) {
 export const SCENES = {
   house: { label: 'Családi ház', build: buildHouse, land: { far: 'land-hills-dawn', near: 'land-meadow' }, place: { x: 0.64, base: 0.74, h: 0.40, push: 1.2 } },
   crane: { label: 'Toronydaru', build: buildCrane, land: { far: 'land-forest-edge', near: 'land-field' }, place: { x: 0.70, base: 0.76, h: 0.62 } },
-  wall: { label: 'Falazás', build: buildWall, land: { far: 'land-lakeside', near: 'land-grass-close' }, place: { x: 0.53, base: 0.84, h: 0.18, push: 1.2, portrait: { x: 0.8, base: 0.985, h: 0.075 } } },
+  wall: { label: 'Falazás', build: buildWall, land: { far: 'land-field', near: null }, place: { x: 0.4, base: 0.84, h: 0.18, solid: true, desktop: { x: 0.24, base: 0.92, h: 0.12 }, portrait: { x: 0.25, base: 0.75, h: 0.15, w: 1.4 } } },
   blocks: { label: 'Építőelemek', build: buildBlocks, land: { far: 'land-valley-mist', near: 'land-forest-floor' }, place: { x: 0.66, base: 0.76, h: 0.36 } },
   tiles: { label: 'Burkolás', build: buildTiles, land: null, place: { x: 0.5, base: 0.8, h: 0.5 } },
   rebar: { label: 'Alapozás', build: buildRebar, land: null, place: { x: 0.5, base: 0.8, h: 0.5 } },

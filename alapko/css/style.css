@@ -368,16 +368,16 @@ section[data-scene] .h2 { font-size: clamp(2.25rem, 4.6vw, 4.25rem); }
 .ticker {
   position: absolute; left: 0; right: 0; bottom: 0;
   overflow: hidden; border-top: 1px solid var(--line);
-  padding: 14px 0; pointer-events: none;
+  padding: 8px 0; pointer-events: none;
 }
 .ticker-track {
   display: flex; align-items: center; gap: 28px; width: max-content;
-  animation: ticker 38s linear infinite;
-  font-size: clamp(1.1rem, 2vw, 1.6rem); font-weight: 600; letter-spacing: -0.02em; color: var(--text-3);
+  font-size: clamp(1.1rem, 2vw, 1.6rem); line-height: 1.2; font-weight: 600; letter-spacing: -0.02em; color: var(--text-3);
   white-space: nowrap;
 }
+.ticker-track span { display: inline-flex; align-items: center; gap: 28px; }
+#rolunk { padding-bottom: 80px; } /* room for the ticker band */
 .ticker-track i { width: 9px; height: 9px; background: var(--amber); transform: rotate(45deg); flex: none; }
-@keyframes ticker { to { transform: translateX(-50%); } }
 
 /* ---------- Photos ---------- */
 .ph {
@@ -619,6 +619,14 @@ section[data-scene] .h2 { font-size: clamp(2.25rem, 4.6vw, 4.25rem); }
 @media (max-width: 1100px) {
   .split-3d { grid-template-columns: 1fr; align-items: start; }
   .float-block--form { justify-self: stretch; max-width: none; }
+  /* open a band so the 3D wall (canvas behind) shows: card top lands near 77svh, just under
+     SCENES.wall.place.portrait.base (0.75); 300px ≈ header + copy height */
+  #falazas .float-block--media { margin-top: max(180px, calc(77svh - 300px)); }
+}
+@media (max-width: 1100px) and (min-aspect-ratio: 1/1) {
+  /* landscape keeps the desktop wall placement (foot ~0.94 of viewport): card top lands just below the
+     fold so the wall shows across the first screen; 380px ≈ section padding + header + copy height */
+  #falazas .float-block--media { margin-top: max(180px, calc(100svh - 380px)); }
 }
 
 @media (max-width: 900px) {
@@ -632,7 +640,7 @@ section[data-scene] .h2 { font-size: clamp(2.25rem, 4.6vw, 4.25rem); }
     grid-template-areas: "copy" "draw" "photos";
   }
   .trade-grid .drawing { max-width: 420px; justify-self: start; }
-  #rolunk { padding-bottom: 120px; }
+  #rolunk { padding-bottom: 72px; }
 }
 
 @media (max-width: 640px) {
@@ -659,8 +667,7 @@ section[data-scene] .h2 { font-size: clamp(2.25rem, 4.6vw, 4.25rem); }
 /* ---------- Reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .ticker-track { animation: none; }
-  .ph { animation: none; }
+    .ph { animation: none; }
   .float-block { will-change: auto; }
   *, *::before, *::after { transition-duration: 0.01ms !important; }
   .ph img, .site-nav, .dd-menu, .pill-menu { transition: opacity 150ms ease !important; }
