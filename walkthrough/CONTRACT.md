@@ -1,6 +1,6 @@
 # Walkthrough: module contract
 
-A scroll-driven first-person walk through a house for **Northbeam Builders** (construction company, same brand as `../index.html`). As you scroll, the camera walks from outside, through the front door, through three rooms, and stops to face whiteboards and posters on the walls that hold the site's content. There is no sound.
+A scroll-driven first-person walk through a house for **Northbeam Builders** (construction company, same brand as `../constSVGSite/index.html`). As you scroll, the camera walks from outside, through the front door, through three rooms, and stops to face whiteboards and posters on the walls that hold the site's content. There is no sound.
 
 Plain ES modules, no build step. Three.js is loaded through an import map in `index.html`:
 ```
@@ -79,7 +79,7 @@ export function createUI(sections) -> { setProgress(p), setActive(id), ready() }
 - `sections`: `[{ id, label }]`, in the same order as `stops`.
 - `index.html` contains: import map, `<link rel=stylesheet href=style.css>`, a fixed full-screen `<canvas id="gl">`, a HUD overlay (logo top-left, "Get a quote" CTA top-right, a vertical room/section rail on the left with the active one highlighted, a progress bar or counter, a "Scroll to walk in" hint that fades after progress > 0.02), a loader that `ready()` hides, and a scroll track `<div id="track">` whose height (≈ 1000vh) gives the walk its length. It ends with `<script type="module" src="main.js"></script>`.
 - Clicking a rail item scrolls the window so progress equals that stop's t. The UI emits this as `window.dispatchEvent(new CustomEvent('walk:goto', { detail: { id } }))` and main.js handles the scroll.
-- Visual language: matches `../index.html` (Archivo + JetBrains Mono, charcoal `#1c1c1a`, paper `#f8f6f2`, amber `#f2a900`). The HUD must stay legible over a 3D scene.
+- Visual language: matches `../constSVGSite/index.html` (Archivo + JetBrains Mono, charcoal `#1c1c1a`, paper `#f8f6f2`, amber `#f2a900`). The HUD must stay legible over a 3D scene.
 - Responsive down to a 375 px width, and respects `prefers-reduced-motion` in the UI transitions.
 
 ### `main.js` (integrator)
