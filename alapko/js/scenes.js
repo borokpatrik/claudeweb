@@ -696,9 +696,9 @@ function buildRebar(v = 0, env = null) {
 // viewport anchor of the object at 16:9 (x centre, y of its base, height as a fraction of the
 // viewport height). Extra fields are optional; build() stays the v1 entry point.
 export const SCENES = {
-  house: { label: 'Családi ház', build: buildHouse, land: { far: 'land-hills-dawn', near: 'land-meadow' }, place: { x: 0.64, base: 0.74, h: 0.40 } },
+  house: { label: 'Családi ház', build: buildHouse, land: { far: 'land-hills-dawn', near: 'land-meadow' }, place: { x: 0.64, base: 0.74, h: 0.40, push: 1.2 } },
   crane: { label: 'Toronydaru', build: buildCrane, land: { far: 'land-forest-edge', near: 'land-field' }, place: { x: 0.70, base: 0.76, h: 0.62 } },
-  wall: { label: 'Falazás', build: buildWall, land: { far: 'land-lakeside', near: 'land-grass-close' }, place: { x: 0.62, base: 0.78, h: 0.30 } },
+  wall: { label: 'Falazás', build: buildWall, land: { far: 'land-lakeside', near: 'land-grass-close' }, place: { x: 0.53, base: 0.84, h: 0.18, push: 1.2, portrait: { x: 0.8, base: 0.985, h: 0.075 } } },
   blocks: { label: 'Építőelemek', build: buildBlocks, land: { far: 'land-valley-mist', near: 'land-forest-floor' }, place: { x: 0.66, base: 0.76, h: 0.36 } },
   tiles: { label: 'Burkolás', build: buildTiles, land: null, place: { x: 0.5, base: 0.8, h: 0.5 } },
   rebar: { label: 'Alapozás', build: buildRebar, land: null, place: { x: 0.5, base: 0.8, h: 0.5 } },

@@ -32,6 +32,10 @@ const MORPH_DUR = 1.3;
 const DISPERSE_DUR = 0.9;
 const STAGGER = 0.45;
 const REPEL_PX = 28;
+const MOUSE_R = 130;      // cursor disturbance radius, CSS px
+const MOUSE_REST = 7;     // push under a resting cursor: a dent, not a hole
+const MOUSE_MAX = 56;     // push at full swipe speed
+const MOUSE_FAST = 2200;  // cursor speed (CSS px/s) that reaches MOUSE_MAX
 const SLICE_MS = 8;
 const MANIFEST_URL = 'assets/photos/manifest.json';
 
@@ -80,6 +84,7 @@ uniform vec2 uViewport;   // CSS px
 uniform vec4 uRect0;      // repel rects: centre xy, half size zw (CSS px); z <= 0 = off
 uniform vec4 uRect1;
 uniform float uRepel;     // max push in CSS px
+uniform vec4 uMouse;      // cursor xy (CSS px), push in CSS px, radius in CSS px
 attribute vec3 aPosB;
 attribute vec4 aColA;
 attribute vec4 aColB;
@@ -125,10 +130,18 @@ void main() {
   vec2 ndc = clip.xy / clip.w;
   vec2 sp = vec2(ndc.x * 0.5 + 0.5, 0.5 - ndc.y * 0.5) * uViewport;
   float inside = 0.0;
-  vec2 push = repel(sp, uRect0, inside) + repel(sp, uRect1, inside);
-  clip.xy += push * uRepel * vec2(2.0 / uViewport.x, -2.0 / uViewport.y) * clip.w;
+  vec2 push = (repel(sp, uRect0, inside) + repel(sp, uRect1, inside)) * uRepel;
+  // cursor disturbance: radial push plus a quarter swirl; per-point jitter keeps it from reading as a lens
+  vec2 dm = sp - uMouse.xy;
+  float dl = length(dm);
+  // zero at the very centre too, so the cursor thins the cloud instead of punching a clean hole
+  float fm = smoothstep(0.0, 0.4 * uMouse.w, dl) * (1.0 - smoothstep(0.2 * uMouse.w, uMouse.w, dl));
+  fm *= step(0.01, uMouse.z);
+  vec2 md = dm / max(dl, 1.0);
+  push += (md + vec2(-md.y, md.x) * 0.3) * fm * uMouse.z * (0.6 + 0.8 * fract(seed * 5.13));
+  clip.xy += push * vec2(2.0 / uViewport.x, -2.0 / uViewport.y) * clip.w;
 
-  vCol = vec4(c.rgb * sh, c.a * (1.0 - 0.3 * inside));
+  vCol = vec4(c.rgb * sh * (1.0 + 0.25 * fm * min(uMouse.z / 30.0, 1.0)), c.a * (1.0 - 0.3 * inside));
   // varied dot sizes give the painterly, scattered look (no grid)
   gl_PointSize = max(uPx * uSizeMul * (0.55 + 0.9 * fract(seed * 13.7)), 1.0);
   gl_Position = vCol.a < 0.003 ? vec4(2.0, 2.0, 2.0, 1.0) : clip;
@@ -248,6 +261,7 @@ export function createEngine(canvas, SCENES) {
     uRect0: { value: new THREE.Vector4() },
     uRect1: { value: new THREE.Vector4() },
     uRepel: { value: REPEL_PX },
+    uMouse: { value: new THREE.Vector4(0, 0, 0, MOUSE_R) },
   };
   const mainMat = new THREE.ShaderMaterial({
     uniforms: { ...U, uSizeMul: { value: 1 } },
@@ -599,10 +613,12 @@ export function createEngine(canvas, SCENES) {
     // placement (D2): normalized anchor at 16:9; portrait centres and shrinks the object
     const pl = def.place || { x: 0.5, base: 0.8, h: 0.5 };
     const portrait = asp < 1;
-    const ax = portrait ? 0.5 : pl.x;
+    // optional per-scene portrait override { x, base, h }, given as final screen fractions
+    const pp = portrait ? pl.portrait : null;
+    const ax = portrait ? (pp ? pp.x : 0.5) : pl.x;
     // foreground: the object stands low in the frame on the near ground, which overlaps its base
-    const hFrac = portrait ? Math.min(0.3, pl.h * 0.8) : Math.min(0.7, pl.h * 1.2);
-    const base = portrait ? 0.7 : Math.min(0.94, pl.base + 0.1);
+    const hFrac = portrait ? (pp ? pp.h : Math.min(0.3, pl.h * 0.8)) : Math.min(0.7, pl.h * 1.2);
+    const base = portrait ? (pp ? pp.base : 0.7) : Math.min(0.94, pl.base + 0.1);
     const axh = (2 * ax - 1) * asp, byh = 1 - 2 * base;
     let Dobj = CAM_DIST;
     if (far) {
@@ -616,6 +632,9 @@ export function createEngine(canvas, SCENES) {
       }
       const d = c ? s / c / 255 : 0.5;
       Dobj = clamp(1 / (1 / D_FAR + (1 / D_NEAR - 1 / D_FAR) * d), 0.75 * CAM_DIST, 1.5 * CAM_DIST);
+      // the back sits at the anchor's ground depth, so a deep object's front hangs nearer than the
+      // ground on its own screen rows; push scales the whole object back (screen size unchanged)
+      Dobj *= pl.push || 1;
     }
 
     const nObj = Math.min(obj.n, far ? T.obj : OBJ_ONLY);
@@ -890,12 +909,19 @@ export function createEngine(canvas, SCENES) {
   let roll = 0;
   const poke = () => { idleFor = 0; };
 
+  // cursor disturbance: distance travelled between frames becomes speed in frame()
+  let mIn = false, mDist = 0, mSpeed = 0, mStr = 0;
   function onPointer(e) {
     poke();
     if (e.pointerType !== 'mouse') return;
     mx = (e.clientX / innerWidth) * 2 - 1;
     my = (e.clientY / innerHeight) * 2 - 1;
+    const m = U.uMouse.value;
+    if (mIn) mDist += Math.hypot(e.clientX - m.x, e.clientY - m.y);
+    m.x = e.clientX; m.y = e.clientY;
+    mIn = true;
   }
+  const onLeave = (e) => { if (!e.relatedTarget) mIn = false; };
 
   /* ---------- activation ---------- */
   let active = null, repelEls = [];
@@ -942,7 +968,7 @@ export function createEngine(canvas, SCENES) {
   }
 
   function wake() {
-    if (running && !raf && !document.hidden && !lost && !modal) { last = performance.now(); raf = requestAnimationFrame(frame); }
+    if (running && !raf && !document.hidden && !lost && !modal) { last = performance.now(); mDist = 0; raf = requestAnimationFrame(frame); }
   }
 
   const rect = (el, v) => {
@@ -1002,6 +1028,14 @@ export function createEngine(canvas, SCENES) {
     U.uRect1.value.set(0, 0, 0, 0);
     if (count > 0) repelEls.forEach((el, i) => rect(el, i ? U.uRect1.value : U.uRect0.value));
 
+    // speed is smoothed so uneven pointer-event timing doesn't flicker; strength attacks fast
+    // (a swipe answers at once) and releases slowly (points drift home instead of snapping)
+    mSpeed += (mDist / dt - mSpeed) * (1 - Math.exp(-dt * 8));
+    mDist = 0;
+    const mWant = reduced || !mIn ? 0 : MOUSE_REST + (MOUSE_MAX - MOUSE_REST) * smooth(0, MOUSE_FAST, mSpeed);
+    mStr += (mWant - mStr) * (1 - Math.exp(-dt * (mWant > mStr ? 12 : 2.2)));
+    U.uMouse.value.z = mStr;
+
     if (count > 0) {
       renderer.render(scene, camera);
       cleared = false;
@@ -1023,6 +1057,8 @@ export function createEngine(canvas, SCENES) {
 
     addEventListener('pointermove', onPointer, { passive: true });
     addEventListener('pointerdown', onPointer, { passive: true });
+    document.addEventListener('pointerout', onLeave, { passive: true });
+    addEventListener('blur', () => { mIn = false; });
     for (const ev of ['scroll', 'wheel', 'keydown', 'touchstart']) addEventListener(ev, poke, { passive: true });
     addEventListener('resize', () => { sizeDirty = true; wake(); });
     mqReduce.addEventListener('change', (e) => {
