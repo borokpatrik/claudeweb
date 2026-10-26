@@ -491,7 +491,8 @@ function drawHouse() {
   const labels = qsa('.svg-label', svg);
   const fill = qsa('.fill', svg);
   gsap.set([...labels, ...fill], { opacity: 0 });
-  drawTimeline(svg, 'top 90%', 'bottom 50%')
+  // finish while the drawing is still in the upper-middle of the screen, not at its top edge
+  drawTimeline(svg, 'top 90%', 'top 35%')
     .to(strokes(svg, '.g-ground'), { strokeDashoffset: 0, duration: 1, stagger: 0.15 })
     .to(strokes(svg, '.g-walls'), { strokeDashoffset: 0, duration: 1.2, stagger: 0.2 }, '-=0.4')
     .to(fill, { opacity: 1, duration: 0.6 }, '-=0.4')
@@ -528,7 +529,7 @@ function drawFoundation() {
   const fill = qsa('.fill', svg);
   gsap.set([...labels, ...fill], { opacity: 0 });
   gsap.set(dots, { scale: 0.2, opacity: 0, transformOrigin: '50% 50%' });
-  drawTimeline(svg, 'top 88%', 'bottom 45%')
+  drawTimeline(svg, 'top 88%', 'top 35%')
     .to(strokes(svg, '.g-soil'), { strokeDashoffset: 0, duration: 1, stagger: 0.18 })
     .to(qsa('.g-soil .svg-label', svg), { opacity: 1, duration: 0.3, stagger: 0.1 }, '-=0.5')
     .to(strokes(svg, '.g-trench'), { strokeDashoffset: 0, duration: 0.9, stagger: 0.2 }, '-=0.3')

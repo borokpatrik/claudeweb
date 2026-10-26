@@ -343,6 +343,12 @@ section[data-scene] .h2 { font-size: clamp(2.25rem, 4.6vw, 4.25rem); }
 .figure dt { margin-top: 8px; font-size: 13px; color: var(--text-3); line-height: 1.3; }
 
 .drawing { position: relative; }
+/* façade drawing gets a short spec column beside it so the right side doesn't read empty */
+.drawing--house { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: clamp(16px, 2vw, 28px); align-items: end; }
+.drawing--house .draw-cap { grid-column: 1 / -1; }
+.draw-notes { list-style: none; margin: 0; padding: 0 0 6px; display: grid; gap: 14px; min-width: 132px; }
+.draw-notes li { font-size: 14px; color: var(--text); border-top: 1px solid var(--line); padding-top: 8px; }
+.draw-notes span { display: block; margin-bottom: 2px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-3); }
 .draw-svg { width: 100%; height: auto; overflow: visible; }
 .draw-svg .draw { fill: none; stroke: var(--white); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 .draw-svg .thin { stroke-width: 1; opacity: 0.6; }
@@ -631,6 +637,8 @@ section[data-scene] .h2 { font-size: clamp(2.25rem, 4.6vw, 4.25rem); }
 
 @media (max-width: 640px) {
   body { font-size: 16px; }
+  .drawing--house { grid-template-columns: 1fr; }
+  .draw-notes { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-top: 18px; }
   .section { padding-block: calc(var(--header-h) + 20px) 96px; }
   .hero-actions .btn { flex: 1 1 auto; }
   .work-cards { grid-template-columns: 1fr; gap: 6px; }
